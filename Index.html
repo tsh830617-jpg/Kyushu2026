@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="九州之旅">
+<title>九州之旅 2026</title>
+<style>
+:root{--bg:#f5f0e8;--surf:#ede8de;--card:#fff;--bd:#ddd5c5;--a:#b8713a;--ad:#95592e;--ab:rgba(184,113,58,.1);--tx:#2a2218;--sub:#7a6a58;--mu:#b8a898;--gr:#5a9048;--rd:#b03830;--wn:#c08830}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);font-family:'Hiragino Sans','Noto Sans TC',sans-serif;color:var(--tx);overflow:hidden}
+button{font-family:inherit;cursor:pointer;border:none;background:none;padding:0}
+input,textarea,select{outline:none;font-family:inherit;color:var(--tx);-webkit-appearance:none}
+select option{background:#fff}
+#app{position:fixed;top:0;bottom:0;width:100%;max-width:430px;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;background:var(--bg);overflow:hidden}
+#hdr{flex-shrink:0;padding:12px 20px 10px;background:var(--card);border-bottom:1px solid var(--bd);display:flex;align-items:center;justify-content:space-between;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+#cnt{flex:1;overflow:hidden;position:relative}
+.tab-pane{position:absolute;top:0;right:0;bottom:0;left:0;display:none;flex-direction:column;overflow:hidden}
+.tab-pane.active{display:flex}
+.scroll{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y;overscroll-behavior-y:contain;padding:14px 14px 70px}
+#tbar{flex-shrink:0;background:var(--card);border-top:1px solid var(--bd);display:flex;z-index:100;padding-bottom:env(safe-area-inset-bottom,0px);box-shadow:0 -1px 8px rgba(0,0,0,.06)}
+.tb-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 0 8px;cursor:pointer;border:none;background:none;font-family:inherit}
+.tb-ico{width:32px;height:24px;display:flex;align-items:center;justify-content:center;border-radius:6px;transition:background .15s}
+.tb-btn.on .tb-ico{background:var(--ab)}
+.tb-lbl{font-size:10px;color:var(--mu);font-weight:400;letter-spacing:.3px}
+.tb-btn.on .tb-lbl{color:var(--a);font-weight:600}
+.card{background:var(--card);border-radius:14px;padding:14px 16px;margin-bottom:10px;border:1px solid var(--bd);box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.stitle{font-size:10px;letter-spacing:2px;color:#b8713a;text-transform:uppercase;font-weight:700;margin-bottom:10px}
+.pbar-wrap{height:3px;background:var(--bd);border-radius:2px;margin-bottom:12px}
+.pbar-fill{height:100%;background:var(--gr);border-radius:2px;transition:width .3s}
+.ibt{width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:var(--surf);border:1px solid var(--bd);flex-shrink:0;cursor:pointer}
+.pill{padding:3px 10px;border-radius:10px;font-size:11px;border:1px solid var(--bd);background:var(--surf);color:var(--sub);cursor:pointer}
+.pill.on{background:var(--a);color:#fff;border-color:var(--ad)}
+.fab{display:flex;align-items:center;gap:5px;padding:6px 14px;border-radius:20px;font-size:12px;font-weight:600;cursor:pointer;border:1px solid var(--bd);background:var(--surf);color:var(--sub);font-family:inherit}
+.fab.on{background:var(--a);color:#fff;border-color:var(--ad)}
+.inp{background:var(--surf);border:1px solid var(--bd);border-radius:6px;padding:7px 10px;font-size:13px;width:100%}
+.inp:focus{border-color:var(--a)}
+.row-item{display:flex;align-items:center;gap:6px;padding:5px 0;border-bottom:1px solid var(--bd)}
+.chk-box{width:20px;height:20px;border-radius:5px;border:2px solid var(--bd);background:transparent;display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .15s;cursor:pointer}
+.chk-box.done{background:var(--gr);border-color:var(--gr)}
+.sort-btns{display:flex;flex-direction:column;gap:1px;flex-shrink:0}
+.day-tabs{display:flex;overflow-x:auto;padding:10px 12px;gap:6px;background:var(--card);border-bottom:1px solid var(--bd);flex-shrink:0;scrollbar-width:none;-ms-overflow-style:none;overscroll-behavior-x:contain;touch-action:pan-x}
+.day-tabs::-webkit-scrollbar{display:none}
+.day-tab{flex-shrink:0;display:flex;flex-direction:column;align-items:center;padding:7px 13px;border-radius:20px;gap:3px;background:var(--surf);border:1px solid var(--bd);cursor:pointer;transition:all .15s}
+.day-tab.on{background:var(--a);border-color:var(--a)}
+.calc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-bottom:7px}
+.cbtn{border-radius:10px;padding:13px 0;font-size:18px;font-weight:500;border:1px solid var(--bd);text-align:center;cursor:pointer;font-family:inherit}
+.cbtn.fn{background:var(--surf);color:var(--sub)}
+.cbtn.op{background:var(--a);color:#fff;border-color:var(--ad)}
+.cbtn.nm{background:var(--card);color:var(--tx)}
+</style>
+</head>
+<body>
+<div id="calc-overlay" onclick="if(event.target===this)closeCalcModal()" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center">
+  <div style="background:#fff;border-radius:16px 16px 0 0;padding:18px 16px 24px;width:100%;max-width:430px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+      <span style="font-size:14px;font-weight:600;color:#2a2218">計算金額</span>
+      <button onclick="closeCalcModal()" style="font-size:22px;color:#b8a898;line-height:1;padding:0 4px">×</button>
+    </div>
+    <div style="background:#ede8de;border-radius:10px;padding:10px 14px;margin-bottom:10px;text-align:right;min-height:52px;border:1px solid #ddd5c5">
+      <div id="calc-op-m" style="font-size:11px;color:#b8a898;min-height:14px"></div>
+      <div id="calc-disp-m" style="font-size:30px;font-weight:600;line-height:1.2">0</div>
+    </div>
+    <div class="calc-grid"><button class="cbtn fn" onclick="doCalc('AC')">AC</button><button class="cbtn fn" onclick="doCalc('⌫')">⌫</button><button class="cbtn op" onclick="doCalc('÷')">÷</button><button class="cbtn op" onclick="doCalc('×')">×</button></div>
+    <div class="calc-grid" style="margin-top:7px"><button class="cbtn nm" onclick="doCalc('7')">7</button><button class="cbtn nm" onclick="doCalc('8')">8</button><button class="cbtn nm" onclick="doCalc('9')">9</button><button class="cbtn op" onclick="doCalc('-')">-</button></div>
+    <div class="calc-grid" style="margin-top:7px"><button class="cbtn nm" onclick="doCalc('4')">4</button><button class="cbtn nm" onclick="doCalc('5')">5</button><button class="cbtn nm" onclick="doCalc('6')">6</button><button class="cbtn op" onclick="doCalc('+')">+</button></div>
+    <div class="calc-grid" style="margin-top:7px"><button class="cbtn nm" onclick="doCalc('1')">1</button><button class="cbtn nm" onclick="doCalc('2')">2</button><button class="cbtn nm" onclick="doCalc('3')">3</button><button class="cbtn op" onclick="doCalc('=')">=</button></div>
+    <div style="display:flex;gap:7px;margin-top:7px;margin-bottom:14px"><button class="cbtn nm" style="flex:2" onclick="doCalc('0')">0</button><button class="cbtn nm" style="flex:1" onclick="doCalc('.')">.</button></div>
+    <button onclick="confirmCalc()" style="width:100%;padding:14px;background:#b8713a;border-radius:12px;color:#fff;font-size:15px;font-weight:700;border:none;font-family:inherit">確認金額 ✓</button>
+  </div>
+</div>
+
+
+<div id="app">
+  <div id="hdr">
+    <div>
+      <div id="hdr-title" style="font-size:15px;font-weight:600;letter-spacing:.5px">九州之旅 2026</div>
+      <div style="font-size:10px;color:var(--mu);margin-top:1px">2026.10.17 — 10.23 ｜ 福岡・由布院・熊本・博多</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px">
+      <div id="sync-badge" style="display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:20px;background:var(--ab);border:1px solid rgba(184,113,58,.25)">
+        <span id="sync-dot" style="width:7px;height:7px;border-radius:50%;background:var(--mu);display:inline-block;transition:background .3s"></span>
+        <span id="sync-lbl" style="font-size:9px;color:var(--mu);letter-spacing:.3px">本地</span>
+      </div>
+      <svg width="28" height="28" viewBox="0 0 44 44" fill="none"><path d="M4 13 Q22 6 40 13" stroke="#b8713a" stroke-width="2.5" stroke-linecap="round"/><line x1="7" y1="19" x2="37" y2="19" stroke="#b8713a" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="17" x2="13" y2="40" stroke="#b8713a" stroke-width="2.5" stroke-linecap="round"/><line x1="31" y1="17" x2="31" y2="40" stroke="#b8713a" stroke-width="2.5" stroke-linecap="round"/><line x1="13" y1="32" x2="9" y2="36" stroke="#b8713a" stroke-width="1.5" stroke-linecap="round"/><line x1="31" y1="32" x2="35" y2="36" stroke="#b8713a" stroke-width="1.5" stroke-linecap="round"/></svg>
+    </div>
+  </div>
+  <div id="cnt">
+    <div id="t-home" class="tab-pane active"><div class="scroll" id="s-home"></div></div>
+    <div id="t-itin" class="tab-pane" style="display:none">
+      <div id="itin-tabs" class="day-tabs"></div>
+      <div class="scroll" id="s-itin"></div>
+    </div>
+    <div id="t-exps" class="tab-pane"><div class="scroll" id="s-exps"></div></div>
+    <div id="t-prep" class="tab-pane"><div class="scroll" id="s-prep"></div></div>
+    <div id="t-other" class="tab-pane"><div class="scroll" id="s-other"></div></div>
+  </div>
+  <nav id="tbar"></nav>
+</div>
+
+<script>
+// ══ Firebase REST ══════════════════════════════════════════════
+var DB='https://fukuoka-fb34d-default-rtdb.firebaseio.com/kyushu2026.json';
+function dbSave(data,cb){fetch(DB,{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)}).then(function(r){if(!r.ok)throw 0;setSyncOk();cb&&cb();}).catch(function(){try{localStorage.setItem('k26',JSON.stringify(data));}catch(e){}setSyncLocal();cb&&cb();});}
+function dbLoad(cb){fetch(DB).then(function(r){if(!r.ok)throw 0;return r.json();}).then(function(d){setSyncOk();cb(d&&typeof d==='object'?d:null);}).catch(function(){try{cb(JSON.parse(localStorage.getItem('k26')));}catch(e){cb(null);}});}
+function setSyncOk(){document.getElementById('sync-dot').style.background='#5a9048';document.getElementById('sync-lbl').style.color='#5a9048';document.getElementById('sync-lbl').textContent='已同步✓';document.getElementById('sync-badge').style.background='rgba(90,144,72,.1)';}
+function setSyncSaving(){document.getElementById('sync-dot').style.background='#c08830';document.getElementById('sync-lbl').style.color='#c08830';document.getElementById('sync-lbl').textContent='儲存中';}
+function setSyncLocal(){document.getElementById('sync-dot').style.background='#b8a898';document.getElementById('sync-lbl').style.color='#b8a898';document.getElementById('sync-lbl').textContent='本地';}
+
+// ══ Helpers ════════════════════════════════════════════════════
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ico(d,s,col,sw){s=s||20;col=col||'currentColor';sw=sw||2;return'<svg width="'+s+'" height="'+s+'" viewBox="0 0 24 24" fill="none" stroke="'+col+'" stroke-width="'+sw+'" stroke-linecap="round" stroke-linejoin="round">'+d+'</svg>';}
+var IC={
+  home:'<path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>',
+  pin:'<path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/>',
+  rec:'<path d="M4 2v20l2-1 2 1 2-1 2 1 2-1 2 1 2-1 2 1V2l-2 1-2-1-2 1-2-1-2 1-2-1Z"/><path d="M16 8H8"/><path d="M16 12H8"/><path d="M12 16H8"/>',
+  pkg:'<path d="m7.5 4.27 9 5.15"/><path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z"/><path d="m3.3 7 8.7 5 8.7-5"/><path d="M12 22V12"/>',
+  book:'<path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/>',
+  plus:'<path d="M5 12h14"/><path d="M12 5v14"/>',
+  trash:'<path d="M3 6h18"/><path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6"/><path d="M8 6V4c0-1 1-2 2-2h4c1 0 2 1 2 2v2"/><line x1="10" x2="10" y1="11" y2="17"/><line x1="14" x2="14" y1="11" y2="17"/>',
+  cup:'<path d="m18 15-6-6-6 6"/>',cdn:'<path d="m6 9 6 6 6-6"/>',cl:'<path d="m15 18-6-6 6-6"/>',cr:'<path d="m9 18 6-6-6-6"/>',
+  pen:'<path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/>',
+  chk:'<path d="M20 6 9 17l-5-5"/>',x:'<path d="M18 6 6 18"/><path d="M6 6l12 12"/>',
+  car:'<path d="M5 17H3a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1l3-3h8l3 3h1a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"/><circle cx="7" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>',
+  plane:'<path d="M17.8 19.2 16 11l3.5-3.5C21 6 21 4 19 4c-2 0-4 1-4 1L3 8.8l-.4 2.1L11 13l-.8 3.3L8 18l1 1 3-1.5 1.5 3 1 .5.4-3Z"/>',
+  phone:'<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.69 12 19.79 19.79 0 0 1 1.61 3.22 2 2 0 0 1 3.6 1h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L7.91 8.6a16 16 0 0 0 6.29 6.29l.96-.96a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/>',
+  flame:'<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>',
+  bldg:'<rect width="16" height="20" x="4" y="2" rx="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M8 10h.01"/><path d="M16 10h.01"/><path d="M8 14h.01"/><path d="M16 14h.01"/>',
+  gift:'<polyline points="20 12 20 22 4 22 4 12"/><rect width="20" height="5" x="2" y="7"/><line x1="12" x2="12" y1="22" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>',
+  cam:'<path d="M14.5 4h-5L7 7H4a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-3l-2.5-3z"/><circle cx="12" cy="13" r="3"/>',
+  nav:'<path d="m3 11 19-9-9 19-2-8-8-2z"/>',
+  calcico:'<rect x="4" y="2" width="16" height="20" rx="2"/><line x1="9" y1="7" x2="15" y2="7"/><line x1="9" y1="12" x2="9" y2="12" stroke-width="2.5"/><line x1="12" y1="12" x2="12" y2="12" stroke-width="2.5"/><line x1="15" y1="12" x2="15" y2="12" stroke-width="2.5"/><line x1="9" y1="16" x2="9" y2="16" stroke-width="2.5"/><line x1="12" y1="16" x2="12" y2="16" stroke-width="2.5"/><line x1="15" y1="16" x2="15" y2="16" stroke-width="2.5"/>'
+};
+var DAYIC=[null,IC.plane,IC.car,IC.cam,IC.flame,IC.bldg,IC.gift,IC.plane];
+
+// 自駕路程資訊（第 2-5 天）
+var DRIVE_LEGS={
+  d2:{total:'總計約 2.5 小時',legs:[
+    {f:'福岡（博多）',t:'太宰府天滿宮',m:'約 40 分'},
+    {f:'太宰府',t:'由布院',m:'約 1.5 小時'}
+  ]},
+  d3:{total:'來回約 1.5 小時',legs:[
+    {f:'由布院',t:'別府（海地獄）',m:'約 35-40 分'},
+    {f:'別府',t:'由布院（返）',m:'約 35-40 分'}
+  ]},
+  d4:{total:'總計約 5 小時',legs:[
+    {f:'由布院',t:'高千穗瀑布',m:'約 2.5 小時'},
+    {f:'高千穗',t:'上色見熊野座神社',m:'約 15 分'},
+    {f:'上色見',t:'阿蘇火山口',m:'約 50 分'},
+    {f:'阿蘇火山口',t:'草千里',m:'約 5 分'},
+    {f:'草千里',t:'熊本',m:'約 1 小時'}
+  ]},
+  d5:{total:'總計約 2 小時',legs:[
+    {f:'熊本城',t:'福岡（還車）',m:'約 2 小時'}
+  ]}
+};
+
+// ══ Data ═══════════════════════════════════════════════════════
+var D_ITIN=[
+  {id:"d1",day:1,date:"10/17 六",title:"福岡機場 / 博多",driving:false,hotel:"🏨 Clio Court Hakata Hotel（入14:00 / 退11:00）",items:[{id:"i1",t:"下班後前往桃園機場"},{id:"i2",t:"04:00 到機場 ✈️ CI110 TPE→FUK 06:50-09:55"},{id:"i3",t:"Uber 到飯店寄行李，找地方休息"},{id:"i4",t:"午餐：待訂"},{id:"i5",t:"博多車站 Dacomecca 麵包"},{id:"i6",t:"晚餐：博多 華味鳥"},{id:"i7",t:"一蘭總店 20:00"}]},
+  {id:"d2",day:2,date:"10/18 日",title:"租車 → 太宰府 → 由布院",driving:true,hotel:"🏨 粼宿花之湯日式旅館 oyado hananoyu（18:00前入住）",items:[{id:"i8",t:"08:00 退房 & 租車"},{id:"i9",t:"09:00 出發"},{id:"i10",t:"09:40-10:40 太宰府天滿宮 梅枝餅"},{id:"i11",t:"12:30 午餐：釜飯心（聽說要等很久）"},{id:"i12",t:"湯布院花卉村（哈比人村）約1小時"},{id:"i13",t:"湯之坪街道 花麵菊家"},{id:"i14",t:"15:00後 Check in"},{id:"i15",t:"晚餐：Carne 雞肉串燒店"},{id:"i16",t:"由布院名產：Milch布丁/起司蛋糕、鞠智銅鑼燒"}]},
+  {id:"d3",day:3,date:"10/19 一",title:"由布院金鱗湖 / 別府",driving:true,hotel:"🏨 粼宿花之湯（連住第2晚）",items:[{id:"i17",t:"08:00 金鱗湖（有霧氣，早起必看）"},{id:"i18",t:"別府海地獄（35-40分鐘車程）"},{id:"i19",t:"午餐：和彩処おおがみ 別府（¥6600/8800）"},{id:"i20",t:"⚠️ 備超商食物（怕隔天早午餐來不及吃）"},{id:"i21",t:"⚠️ 早點睡！明天07:30退房！"}]},
+  {id:"d4",day:4,date:"10/20 二",title:"由布 → 高千穗 & 阿蘇 → 熊本",driving:true,hotel:"🏨 Grids Premium Hotel Kumamoto（入15:00/退11:00）",items:[{id:"i22",t:"07:30 退房（車程約2.5小時）"},{id:"i23",t:"10:00 高千穗瀑布（11:30離開）"},{id:"i24",t:"12:15 上色見熊野座神社"},{id:"i25",t:"13:30 道の駅 あそ望の郷くぎの"},{id:"i26",t:"14:00 阿蘇火山口（⚠️戴口罩！停車費備零錢）"},{id:"i27",t:"16:30 草千里（可買咖啡）"},{id:"i28",t:"⚠️ 進阿蘇前下載Google Maps離線地圖"},{id:"i29",t:"Check in 後再吃晚餐"}]},
+  {id:"d5",day:5,date:"10/21 三",title:"熊本一日遊 → 博多（還車）",driving:true,hotel:"🏨 Hotel La Foresta（入14:00）",items:[{id:"i30",t:"10:30 退房"},{id:"i31",t:"熊本城（09:00-17:00）"},{id:"i32",t:"午餐：待訂"},{id:"i33",t:"下午離開熊本"},{id:"i34",t:"⚠️ 20:00前到福岡還車（車程約2小時）"}]},
+  {id:"d6",day:6,date:"10/22 四",title:"博多市區 🎂",driving:false,hotel:"🏨 Hotel La Foresta（連住）",items:[{id:"i35",t:"12:00 午餐"},{id:"i36",t:"博多市區 → 住吉神社"},{id:"i37",t:"博多運河城（ON 搭配優惠券95折）"},{id:"i38",t:"買伴手禮"},{id:"i39",t:"牛舌 AGITO HIRAO 平尾2-15-1（要預約，地鐵N綠線轉T紅線）"}]},
+  {id:"d7",day:7,date:"10/23 五",title:"博多 → 福岡機場",driving:false,hotel:"",items:[{id:"i40",t:"11:00 退房，寄行李"},{id:"i41",t:"午餐：待訂"},{id:"i42",t:"18:20 抵達福岡機場"},{id:"i43",t:"21:00 ✈️ CI117 FUK→TPE 22:25 抵台"}]}
+];
+var D_PREP=[
+  {id:"p1",t:"兩個人辦國際駕照",done:false,urg:true},{id:"p2",t:"日文駕照譯本（監理站）準備駕照/身分證",done:false,urg:true},
+  {id:"p3",t:"台灣駕照正本",done:false,urg:true},{id:"p4",t:"預約租車（全險/兩人駕駛險/ETC）",done:false,urg:true},
+  {id:"p5",t:"護照",done:false,urg:true},{id:"p6",t:"郊區日幣現金充足（台幣一人1.5-2萬）",done:false,urg:true},
+  {id:"p7",t:"確認阿蘇火山官網道路是否開放",done:false,urg:true},
+  {id:"p8",t:"eSIM",done:false,urg:false},{id:"p9",t:"旅平險",done:false,urg:false},{id:"p10",t:"暈車藥",done:false,urg:false},
+  {id:"p11",t:"帶雨傘/雨衣",done:false,urg:false},{id:"p12",t:"預找停車地點🅿️",done:false,urg:false},
+  {id:"p13",t:"準備阿蘇口罩（備Plan B熊本城）",done:false,urg:false},{id:"p14",t:"無痕膠帶＋細奇異筆",done:false,urg:false},
+  {id:"p15",t:"帶義美小泡芙＆QQ球",done:false,urg:false},{id:"p16",t:"薄長袖＋風衣外套",done:false,urg:false},{id:"p17",t:"晚上郊區備羽絨背心",done:false,urg:false}
+];
+var D_LUG=[
+  {id:"a1",cat:"出國文件",t:"護照＋護照影本",done:false},{id:"a2",cat:"出國文件",t:"電子秤",done:false},{id:"a3",cat:"出國文件",t:"折疊行李袋×2",done:false},{id:"a4",cat:"出國文件",t:"國際駕照＋日本譯本＋台灣駕照",done:false},{id:"a5",cat:"出國文件",t:"當地現金/交通卡/票券",done:false},{id:"a6",cat:"出國文件",t:"eSIM",done:false},{id:"a7",cat:"出國文件",t:"旅平險",done:false},
+  {id:"b1",cat:"3C相關",t:"相機",done:false},{id:"b2",cat:"3C相關",t:"Acepro2",done:false},{id:"b3",cat:"3C相關",t:"電池們",done:false},{id:"b4",cat:"3C相關",t:"充電器（全部）",done:false},{id:"b5",cat:"3C相關",t:"行動電源",done:false},{id:"b6",cat:"3C相關",t:"腳架",done:false},{id:"b7",cat:"3C相關",t:"旅行延長線",done:false},
+  {id:"c1",cat:"生活用品",t:"盥洗用品",done:false},{id:"c2",cat:"生活用品",t:"護髮",done:false},{id:"c3",cat:"生活用品",t:"牙刷牙膏",done:false},{id:"c4",cat:"生活用品",t:"保養品",done:false},{id:"c5",cat:"生活用品",t:"卸妝",done:false},{id:"c6",cat:"生活用品",t:"鏡子＋折疊鏡",done:false},{id:"c7",cat:"生活用品",t:"隱形眼鏡",done:false},{id:"c8",cat:"生活用品",t:"面膜",done:false},{id:"c9",cat:"生活用品",t:"寬梳＋捲梳＋吹風機",done:false},{id:"c10",cat:"生活用品",t:"棉條＋護墊",done:false},{id:"c11",cat:"生活用品",t:"旅行衣架×3",done:false},{id:"c12",cat:"生活用品",t:"墨鏡",done:false},{id:"c13",cat:"生活用品",t:"折疊水壺",done:false},{id:"c14",cat:"生活用品",t:"夾鏈袋/壓縮袋",done:false},{id:"c15",cat:"生活用品",t:"餐具（鈦叉子）",done:false},
+  {id:"e1",cat:"衣物",t:"3短上衣",done:false},{id:"e2",cat:"衣物",t:"3薄長袖",done:false},{id:"e3",cat:"衣物",t:"2長褲",done:false},{id:"e4",cat:"衣物",t:"1裙子",done:false},{id:"e5",cat:"衣物",t:"1洋裝",done:false},{id:"e6",cat:"衣物",t:"5-6套內衣褲（可丟的帶去）",done:false},{id:"e7",cat:"衣物",t:"速乾毛巾",done:false},{id:"e8",cat:"衣物",t:"4-5雙襪子",done:false},{id:"e9",cat:"衣物",t:"1薄襯衫",done:false},{id:"e10",cat:"衣物",t:"風衣外套＋防風外套",done:false},{id:"e11",cat:"衣物",t:"羽絨背心",done:false},{id:"e12",cat:"衣物",t:"1套睡衣褲（薄長褲）",done:false}
+];
+var D_MEMO="🛍 購物清單\n- 無印良品：國際轉接頭\n- Hoka or ON 鞋\n- Snow Peak！\n- UQ：內衣褲/發熱衣/側背包\n- 保健品：DHC/EVE/鋅/鐵\n- Mont-bell：外套/折疊側背包\n- Orbis\n\n🍽 吃的名單\n- 牛舌 AGITO HIRAO（福岡市中央区平尾2-15-1）\n  需預約｜地鐵N綠線轉T紅線";
+var DRIVE=[
+  {id:"s1",icon:"🚦",title:"日本交通規則",open:false,items:["靠左行駛（與台灣相反！）","紅燈禁止右轉（除非有箭頭燈）","全程需繫安全帶，後座亦同","禁止使用手機駕車，酒精零容忍","速限：市區40-60 / 高速100 km/h"]},
+  {id:"s2",icon:"🚗",title:"租車注意事項",open:false,items:["備妥：台灣駕照正本＋日本譯本＋國際駕照＋護照","建議加購全險（CDW）及兩人駕駛保險","確認ETC已激活，還車前加滿油","取車時拍照記錄刮痕存證"]},
+  {id:"s3",icon:"⛽",title:"加油注意事項",open:false,items:["九州常見：ENEOS、出光、コスモ石油","油種：通常選レギュラー（92）","自助：選油種→插槍→付款→加油","郊區加油站較少，建議提早加油"]},
+  {id:"s4",icon:"🅿️",title:"停車注意事項",open:false,items:["推薦Times、NPC、三井Repark","阿蘇火山口、草千里需收費（備零錢）","路邊停車確認標誌（黃線=禁停）","自駕日停車費總計約¥2000-3000"]},
+  {id:"s5",icon:"🌋",title:"阿蘇注意事項",open:false,items:["出發前確認火山活動：aso.ne.jp","如管制需備用行程（熊本城/水前寺）","建議戴口罩防火山氣體","進山區前下載Google Maps離線地圖"]},
+  {id:"s6",icon:"🗺️",title:"導航建議",open:false,items:["主要用 Google Maps（進阿蘇前下載離線）","日本高速使用ETC車道（標示E）","非ETC車道需停車取票/付現","高千穗山區Google Maps可能不準"]}
+];
+
+// ══ App State ══════════════════════════════════════════════════
+var S={
+  tab:'home', ready:false,
+  itin:D_ITIN, prep:D_PREP, lug:D_LUG,
+  exps:[{id:"x1",date:"預付",cat:"機票",desc:"CI110/CI117 來回（雙人）",amt:26692,cur:"TWD"},{id:"x2",date:"預付",cat:"住宿",desc:"7晚住宿（雙人）",amt:18000,cur:"TWD"}],
+  emrg:[{id:"ec1",label:"日本警察",num:"110"},{id:"ec2",label:"救護/火警",num:"119"},{id:"ec3",label:"中華航空客服",num:"02-2715-1212"},{id:"ec4",label:"台灣外交部緊急",num:"+886-2-2348-2999"},{id:"ec5",label:"租車公司緊急",num:"（填入）"},{id:"ec6",label:"信用卡海外掛失",num:"（填入）"}],
+  memo:D_MEMO, drive:DRIVE,
+  // UI state
+  itinDay:0, itinEdit:false, itinTitleEdit:false, itinTitleVal:'',
+  prepSub:'prep', prepEdit:false, lugEdit:{},
+  expsEdit:false, expsNew:false,
+  // edit in-place
+  editId:null, editVal:'', editList:'',
+  // emrg edit
+  emrgEid:null, emrgVal:{},
+  // calc
+  calc:{disp:'0',prev:null,op:null,nxt:false},
+  calcForm:{date:'',cat:'餐飲',desc:'',amount:'',cur:'JPY'}
+};
+
+// ══ Save (debounced) ═══════════════════════════════════════════
+var saveTimer=null;
+function scheduleSave(){
+  if(!S.ready)return;
+  setSyncSaving();
+  clearTimeout(saveTimer);
+  saveTimer=setTimeout(function(){
+    dbSave({itin:S.itin,prep:S.prep,lug:S.lug,exps:S.exps,emrg:S.emrg,memo:S.memo});
+  },1200);
+}
+
+// ══ Tab navigation ═════════════════════════════════════════════
+var TABS=[{id:'home',label:'首頁'},{id:'itin',label:'行程'},{id:'exps',label:'記帳'},{id:'prep',label:'行李'},{id:'other',label:'其他'}];
+var TITLES={home:'九州之旅 2026',itin:'行程規劃',exps:'記帳',prep:'行前準備＆行李',other:'其他資訊'};
+var TAB_ICOS={home:IC.home,itin:IC.pin,exps:IC.rec,prep:IC.pkg,other:IC.book};
+
+function buildTabBar(){
+  return TABS.map(function(t){
+    var on=S.tab===t.id;
+    return '<button class="tb-btn'+(on?' on':'')+'" onclick="setTab(\''+t.id+'\')" >'+
+      '<div class="tb-ico">'+ico(TAB_ICOS[t.id],20,on?'#b8713a':'#b8a898',on?2:1.5)+'</div>'+
+      '<span class="tb-lbl">'+t.label+'</span></button>';
+  }).join('');
+}
+function setTab(id){
+  S.tab=id; S.editId=null;
+  document.querySelectorAll('.tab-pane').forEach(function(el){el.style.display='none';el.classList.remove('active');});
+  var el=document.getElementById('t-'+id);
+  el.style.display='flex'; el.classList.add('active');
+  document.getElementById('hdr-title').textContent=TITLES[id];
+  document.getElementById('tbar').innerHTML=buildTabBar();
+  renderTab(id);
+}
+function renderTab(id){
+  if(id==='home')renderHome();
+  else if(id==='itin')renderItin();
+  else if(id==='exps')renderExps();
+  else if(id==='prep')renderPrep();
+  else if(id==='other')renderOther();
+}
+
+// ══ HTML builders ══════════════════════════════════════════════
+function card(content,extra){return '<div class="card'+(extra?' '+extra:'')+'">'+content+'</div>';}
+function stitle(t){return '<div class="stitle" style="color:#b8713a">'+t+'</div>';}
+function pbar(v,tot){return '<div class="pbar-wrap"><div class="pbar-fill" style="width:'+(tot?Math.round(v/tot*100):0)+'%"></div></div>';}
+function fab(on,action){return '<button class="fab'+(on?' on':'')+'" onclick="'+action+'">'+(on?ico(IC.chk,13,'#fff')+' 完成':ico(IC.pen,13,'#7a6a58')+' 編輯')+'</button>';}
+function ibt(action,icname,col){return '<button class="ibt" onclick="'+action+'">'+ico(IC[icname],14,col||'#7a6a58')+'</button>';}
+function sortBtns(upA,dnA){return '<div class="sort-btns"><button onclick="'+upA+'" style="padding:0;display:flex">'+ico(IC.cup,12,'#b8a898')+'</button><button onclick="'+dnA+'" style="padding:0;display:flex">'+ico(IC.cdn,12,'#b8a898')+'</button></div>';}
+
+// ── HOME ────────────────────────────────────────────────────────
+function renderHome(){
+  var h='<div style="text-align:center;background:#fff;border-radius:16px;padding:22px 20px 18px;margin-bottom:10px;border:1px solid #ddd5c5;box-shadow:0 1px 4px rgba(0,0,0,.05)">'+
+    '<svg width="48" height="48" viewBox="0 0 44 44" fill="none"><path d="M4 13 Q22 6 40 13" stroke="#b8713a" stroke-width="2.5" stroke-linecap="round"/><line x1="7" y1="19" x2="37" y2="19" stroke="#b8713a" stroke-width="2" stroke-linecap="round"/><line x1="13" y1="17" x2="13" y2="40" stroke="#b8713a" stroke-width="2.5" stroke-linecap="round"/><line x1="31" y1="17" x2="31" y2="40" stroke="#b8713a" stroke-width="2.5" stroke-linecap="round"/><line x1="13" y1="32" x2="9" y2="36" stroke="#b8713a" stroke-width="1.5" stroke-linecap="round"/><line x1="31" y1="32" x2="35" y2="36" stroke="#b8713a" stroke-width="1.5" stroke-linecap="round"/></svg>'+
+    '<div style="font-size:22px;font-weight:600;letter-spacing:1.5px;margin-top:10px;margin-bottom:2px">九州之旅</div>'+
+    '<div style="font-size:9px;letter-spacing:1.5px;color:#b8713a;margin-bottom:5px">｜ HUA &amp; WEI\'S TRIP ｜</div>'+
+    '<div style="font-size:12px;color:#7a6a58;letter-spacing:.5px">2026.10.17 ─ 10.23 ✦ 7天6夜</div></div>';
+  h+=card(stitle('航班資訊')+
+    '<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'+
+      '<div style="width:30px;height:30px;border-radius:9px;background:rgba(184,113,58,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ico(IC.plane,15,'#b8713a')+'</div>'+
+      '<div><div style="font-size:13px;font-weight:500">CI110 ｜ 桃園 → 福岡</div><div style="font-size:11px;color:#7a6a58">10/17 (六) 06:50–09:55 ｜ T2→T1</div></div></div>'+
+    '<div style="height:1px;background:#ddd5c5;margin:6px 0"></div>'+
+    '<div style="display:flex;align-items:center;gap:10px;padding:4px 0">'+
+      '<div style="width:30px;height:30px;border-radius:9px;background:rgba(184,113,58,.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;transform:scaleX(-1)">'+ico(IC.plane,15,'#b8713a')+'</div>'+
+      '<div><div style="font-size:13px;font-weight:500">CI117 ｜ 福岡 → 桃園</div><div style="font-size:11px;color:#7a6a58">10/23 (五) 21:00–22:25 ｜ T1→T2</div></div></div>');
+  h+=card(stitle('行程概覽')+
+    S.itin.map(function(d,i){
+      var DI=DAYIC[d.day]||IC.pin;
+      return '<div onclick="setTab(\'itin\');itinGoDay('+i+')" style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:'+(i<S.itin.length-1?'1px solid #ddd5c5':'none')+';cursor:pointer">'+
+        '<div style="width:28px;height:28px;border-radius:8px;background:rgba(184,113,58,.1);border:1px solid rgba(184,113,58,.3);display:flex;align-items:center;justify-content:center;flex-shrink:0">'+ico(DI,14,'#b8713a',1.5)+'</div>'+
+        '<div style="flex:1"><div style="font-size:10px;color:#b8a898;letter-spacing:.5px">Day'+d.day+' · '+esc(d.date)+'</div><div style="font-size:13px;line-height:1.4;margin-top:1px">'+esc(d.title)+'</div></div>'+
+        ico(IC.cr,14,'#b8a898')+'</div>';
+    }).join('')+
+    '');
+  document.getElementById('s-home').innerHTML=h;
+}
+
+// ── ITIN ────────────────────────────────────────────────────────
+function renderItinTabs(){
+  document.getElementById('itin-tabs').innerHTML=S.itin.map(function(d,i){
+    var on=i===S.itinDay, DI=DAYIC[d.day]||IC.pin;
+    return '<button class="day-tab'+(on?' on':'')+'" onclick="itinGoDay('+i+')">'+
+      ico(DI,13,on?'#fff':'#b8a898',on?2:1.5)+
+      '<div style="font-size:11px;font-weight:'+(on?'600':'400')+';color:'+(on?'#fff':'#7a6a58')+';white-space:nowrap">Day'+d.day+'</div>'+
+      '<div style="font-size:9px;color:'+(on?'rgba(255,255,255,.7)':'#b8a898')+';white-space:nowrap">'+esc(d.date)+'</div></button>';
+  }).join('');
+}
+function renderItin(){
+  renderItinTabs();
+  var day=S.itin[S.itinDay], DI=DAYIC[day.day]||IC.pin, em=S.itinEdit;
+  var h='<div style="display:flex;align-items:center;gap:10px;margin-bottom:14px">'+
+    '<button onclick="itinGoDay(Math.max(0,'+S.itinDay+'-1))" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#fff;border:1px solid #ddd5c5;flex-shrink:0;opacity:'+(S.itinDay===0?.3:1)+'">'+ico(IC.cl,18,'#7a6a58')+'</button>'+
+    '<div style="flex:1;text-align:center"><div style="width:36px;height:36px;border-radius:12px;background:rgba(184,113,58,.1);border:1px solid #b8713a;display:flex;align-items:center;justify-content:center;margin:0 auto 8px">'+ico(DI,18,'#b8713a',1.5)+'</div>'+
+      (S.itinTitleEdit?
+        '<div style="display:flex;align-items:center;gap:6px;margin:0 8px">'+
+          '<input id="title-inp" class="inp" value="'+esc(S.itinTitleVal)+'" style="text-align:center;font-size:14px;font-weight:600" oninput="S.itinTitleVal=this.value" onkeydown="handleTitleKey(event)"/>'+
+          ibt("commitTitle()",'chk','#5a9048')+
+          ibt("cancelTitle()",'x','#b8a898')+
+        '</div>'
+      :
+        '<div style="display:flex;align-items:center;justify-content:center;gap:6px">'+
+          '<span style="font-size:15px;font-weight:600;line-height:1.4">'+esc(day.title)+'</span>'+
+          '<button onclick="startTitleEdit()" style="flex-shrink:0;opacity:.5;padding:0;display:flex">'+ico(IC.pen,13,'#7a6a58')+'</button>'+
+        '</div>'
+      )+
+      '<div style="font-size:11px;color:#b8a898;margin-top:4px">Day'+day.day+' ｜ '+esc(day.date)+(day.driving?' · 自駕 🚗':'')+'</div></div>'+
+    '<button onclick="itinGoDay(Math.min('+S.itin.length+'-1,'+S.itinDay+'+1))" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#fff;border:1px solid #ddd5c5;flex-shrink:0;opacity:'+(S.itinDay===S.itin.length-1?.3:1)+'">'+ico(IC.cr,18,'#7a6a58')+'</button></div>';
+  if(day.hotel)h+='<div style="font-size:12px;color:#7a6a58;margin-bottom:10px;padding:8px 12px;background:rgba(184,113,58,.1);border-radius:8px;border:1px solid #ddd5c5;line-height:1.6">'+esc(day.hotel)+'</div>';
+  h+=card(stitle('行程安排')+
+    '<div style="font-size:11px;color:#b8a898;margin-bottom:8px">點 '+ico(IC.nav,11,'#b8713a')+' 可開啟 Google Maps</div>'+
+    '<div id="itin-items">'+buildItinItems(day,em)+'</div>'+
+    (em?'<button onclick="itinAddItem()" style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 12px;background:var(--surf);border-radius:8px;border:1px dashed var(--bd);width:100%;justify-content:center;font-size:13px;color:var(--mu)">'+ico(IC.plus,14,'#b8a898')+' 新增項目</button>':'')+
+    '<div style="display:flex;justify-content:flex-end;margin-top:8px">'+fab(em,'itinToggleEdit()')+'</div>');
+  // 自駕路程資訊（行程安排之後）
+  var dl=DRIVE_LEGS[day.id];
+  if(dl){
+    h+='<div style="margin-bottom:12px;background:#ede8de;border-radius:10px;padding:10px 12px;border:1px solid #ddd5c5">'+
+      '<div style="display:flex;align-items:center;gap:6px;margin-bottom:8px">'+
+        ico(IC.car,14,'#b8713a',1.5)+
+        '<span style="font-size:12px;font-weight:600;color:#b8713a">自駕路程</span>'+
+        '<span style="margin-left:auto;font-size:11px;color:#7a6a58">'+esc(dl.total)+'</span>'+
+      '</div>'+
+      dl.legs.map(function(leg,i){
+        return '<div style="display:flex;align-items:center;gap:6px;padding:4px 0'+(i<dl.legs.length-1?';border-bottom:1px solid rgba(0,0,0,.06)':'')+'">'+
+          '<div style="flex:1;min-width:0">'+
+            '<span style="font-size:11px;color:#7a6a58">'+esc(leg.f)+'</span>'+
+            '<span style="font-size:11px;color:#b8a898;margin:0 4px">→</span>'+
+            '<span style="font-size:11px;color:#7a6a58">'+esc(leg.t)+'</span>'+
+          '</div>'+
+          '<span style="font-size:12px;font-weight:600;color:#b8713a;flex-shrink:0;background:#fff;padding:2px 8px;border-radius:10px;border:1px solid rgba(184,113,58,.25)">'+esc(leg.m)+'</span>'+
+        '</div>';
+      }).join('')+
+    '</div>';
+  }
+  h+='<div style="display:flex;justify-content:center;gap:6px;margin-top:6px;padding-bottom:6px">'+
+    S.itin.map(function(_,i){return'<button onclick="itinGoDay('+i+')" style="width:'+(i===S.itinDay?20:6)+'px;height:6px;border-radius:3px;background:'+(i===S.itinDay?'#b8713a':'#ddd5c5')+';padding:0;transition:all .2s"></button>';}).join('')+'</div>';
+  document.getElementById('s-itin').innerHTML=h;
+  if(S.editId){setTimeout(function(){var inp=document.getElementById('inp-'+S.editId);if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);}
+}
+function jsq(s){return String(s||'').replace(/\\/g,'\\\\').replace(/'/g,"\\'");}
+function buildItinItems(day,em){
+  var did=day.id;
+  return day.items.map(function(it){
+    var iid=it.id, tq=jsq(it.t);
+    if(S.editId===it.id)return '<div class="row-item">'+
+      sortBtns("itinMv('"+did+"','"+iid+"','up')","itinMv('"+did+"','"+iid+"','dn')")+
+      '<input id="inp-'+iid+'" class="inp" value="'+esc(S.editVal)+'" style="flex:1" oninput="S.editVal=this.value" onkeydown="handleEditKey(event,\'itin\',\''+did+'\',\''+iid+'\')" />'+
+      ibt("commitEdit('itin','"+did+"','"+iid+"')",'chk','#5a9048')+
+      ibt("cancelEdit()",'x','#b8a898')+'</div>';
+    var mapQ=encodeURIComponent(it.t.replace(/^\d{1,2}:\d{2}[^\s]*\s*/,''));
+    return '<div class="row-item">'+
+      sortBtns("itinMv('"+did+"','"+iid+"','up')","itinMv('"+did+"','"+iid+"','dn')")+
+      '<span style="flex:1;font-size:13px;line-height:1.6;padding:2px 0">'+esc(it.t)+'</span>'+
+      '<a href="https://maps.google.com/?q='+mapQ+'" target="_blank" style="width:26px;height:26px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(184,113,58,.1);border:1px solid rgba(184,113,58,.25);flex-shrink:0;text-decoration:none">'+ico(IC.nav,13,'#b8713a')+'</a>'+
+      (em?ibt("startEdit('"+iid+"','"+tq+"','itin')",'pen'):'')+
+      (em?ibt("itinDelItem('"+did+"','"+iid+"')",'trash','#b03830'):'')+'</div>';
+  }).join('');
+}
+function itinGoDay(i){S.itinDay=Math.max(0,Math.min(S.itin.length-1,i));S.itinEdit=false;S.itinTitleEdit=false;S.editId=null;renderItin();}
+function startTitleEdit(){var d=S.itin[S.itinDay];S.itinTitleEdit=true;S.itinTitleVal=d.title;renderItin();setTimeout(function(){var inp=document.getElementById('title-inp');if(inp){inp.focus();inp.select();}},50);}
+function commitTitle(){var v=S.itinTitleVal.trim();if(v)S.itin[S.itinDay].title=v;S.itinTitleEdit=false;scheduleSave();renderItin();renderHome();}
+function cancelTitle(){S.itinTitleEdit=false;renderItin();}
+function handleTitleKey(e){if(e.key==='Enter')commitTitle();else if(e.key==='Escape')cancelTitle();}
+function itinToggleEdit(){S.itinEdit=!S.itinEdit;S.editId=null;renderItin();}
+function itinMv(did,iid,dir){var d=S.itin.find(function(x){return x.id===did;});if(!d)return;var a=d.items.slice(),idx=a.findIndex(function(i){return i.id===iid;}),ni=dir==='up'?idx-1:idx+1;if(ni<0||ni>=a.length)return;var tmp=a[idx];a[idx]=a[ni];a[ni]=tmp;d.items=a;scheduleSave();renderItin();}
+function itinDelItem(did,iid){var d=S.itin.find(function(x){return x.id===did;});if(!d)return;d.items=d.items.filter(function(i){return i.id!==iid;});scheduleSave();renderItinItems2();}
+function itinAddItem(){var d=S.itin[S.itinDay];d.items.push({id:uid(),t:'新增項目'});scheduleSave();document.getElementById('itin-items').innerHTML=buildItinItems(d,true);}
+function renderItinItems2(){var d=S.itin[S.itinDay];document.getElementById('itin-items').innerHTML=buildItinItems(d,S.itinEdit);}
+
+// ── EXPS ────────────────────────────────────────────────────────
+var CC={餐飲:'#b03830',交通:'#5090b8',購物:'#b09040',門票:'#5a9048',住宿:'#8060a8',機票:'#4080b8',其他:'#b8a898'};
+var CATS=['餐飲','交通','購物','門票','住宿','機票','其他'];
+function twd(e){return e.cur==='TWD'?e.amt:e.amt/4.5;}
+function buildPie(){
+  var totals={},total=S.exps.reduce(function(s,e){return s+twd(e);},0);
+  S.exps.forEach(function(e){totals[e.cat]=(totals[e.cat]||0)+twd(e);});
+  var data=Object.keys(totals).filter(function(k){return totals[k]>0;}).map(function(k){return{l:k,v:totals[k],c:CC[k]||'#b8a898'};});
+  if(!total||!data.length)return '<div style="text-align:center;padding:20px 0;color:#b8a898;font-size:13px">尚無支出資料</div>';
+  var segs='',angle=-90;
+  data.forEach(function(d){var sw=(d.v/total)*360*(data.length===1?.9999:1);var a1=angle*Math.PI/180,a2=(angle+sw)*Math.PI/180,R=62,ri=38,cx=80,cy=80;var x1=cx+R*Math.cos(a1),y1=cy+R*Math.sin(a1),x2=cx+R*Math.cos(a2),y2=cy+R*Math.sin(a2),ix1=cx+ri*Math.cos(a1),iy1=cy+ri*Math.sin(a1),ix2=cx+ri*Math.cos(a2),iy2=cy+ri*Math.sin(a2),lg=sw>180?1:0;segs+='<path d="M'+x1.toFixed(1)+' '+y1.toFixed(1)+' A '+R+' '+R+' 0 '+lg+' 1 '+x2.toFixed(1)+' '+y2.toFixed(1)+' L '+ix2.toFixed(1)+' '+iy2.toFixed(1)+' A '+ri+' '+ri+' 0 '+lg+' 0 '+ix1.toFixed(1)+' '+iy1.toFixed(1)+' Z" fill="'+d.c+'"/>';angle+=sw;});
+  var tTWD=total,tJPY=S.exps.reduce(function(s,e){return s+(e.cur==='JPY'?e.amt:e.amt*4.5);},0);
+  var lbl=tTWD>=10000?Math.round(tTWD/1000)+'k':Math.round(tTWD);
+  var legend=data.map(function(d){return'<div style="display:flex;align-items:center;gap:6px"><span style="width:8px;height:8px;border-radius:50%;background:'+d.c+';display:inline-block;flex-shrink:0"></span><span style="font-size:11px;color:#7a6a58;flex:1">'+esc(d.l)+'</span><span style="font-size:11px;color:#2a2218;font-weight:600">'+Math.round(d.v/total*100)+'%</span></div>';}).join('');
+  return '<div style="display:flex;align-items:center;gap:12px">'+
+    '<svg viewBox="0 0 160 160" width="130" height="130" style="flex-shrink:0;display:block">'+segs+'<circle cx="80" cy="80" r="36" fill="#fff"/><text x="80" y="76" text-anchor="middle" font-size="9" fill="#b8a898">台幣約</text><text x="80" y="92" text-anchor="middle" font-size="13" font-weight="700" fill="#2a2218">'+lbl+'</text></svg>'+
+    '<div style="flex:1;display:flex;flex-direction:column;gap:7px">'+legend+'<div style="margin-top:4px;padding-top:6px;border-top:1px solid #ddd5c5"><div style="font-size:11px;color:#7a6a58">¥'+Math.round(tJPY).toLocaleString()+'</div><div style="font-size:13px;color:#b8713a;font-weight:700">NT$'+Math.round(tTWD).toLocaleString()+'</div></div></div></div>';
+}
+function buildExpsList(){
+  var em=S.expsEdit;
+  if(!S.exps.length)return '<div style="font-size:13px;color:#b8a898;text-align:center;padding:12px 0">尚無記錄</div>';
+  return S.exps.map(function(e){
+    if(S.editId===e.id){
+      var v=S.editVal||{};
+      return '<div style="padding:10px 0;border-bottom:1px solid #ddd5c5">'+
+        '<div style="display:flex;gap:6px;margin-bottom:6px">'+
+          '<input class="inp" style="flex:1" placeholder="日期" value="'+esc(v.date!=null?v.date:e.date)+'" oninput="S.editVal.date=this.value"/>'+
+          '<input class="inp" style="flex:1" type="number" placeholder="金額" value="'+esc(v.amount!=null?v.amount:e.amt)+'" oninput="S.editVal.amount=this.value"/>'+
+          '<select class="inp" style="flex:.8;padding:7px 4px" onchange="S.editVal.cur=this.value"><option value="JPY"'+((v.cur||e.cur)==='JPY'?' selected':'')+'>¥ JPY</option><option value="TWD"'+((v.cur||e.cur)==='TWD'?' selected':'')+'>NT$</option></select></div>'+
+        '<input class="inp" style="margin-bottom:6px" placeholder="描述" value="'+esc(v.desc!=null?v.desc:e.desc)+'" oninput="S.editVal.desc=this.value"/>'+
+        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">'+CATS.map(function(c){var on=(v.cat||e.cat)===c;return'<button class="pill'+(on?' on':'')+'" onclick="S.editVal.cat=\''+jsq(c)+'\';renderExps()">'+esc(c)+'</button>';}).join('')+'</div>'+
+        '<div style="display:flex;gap:6px">'+ibt("commitExpEdit('"+e.id+"')",'chk','#5a9048')+ibt("cancelEdit()",'x','#b8a898')+'</div></div>';
+    }
+    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ddd5c5">'+
+      '<div style="width:7px;height:7px;border-radius:50%;background:'+(CC[e.cat]||'#b8a898')+';flex-shrink:0"></div>'+
+      '<div style="flex:1;min-width:0"><div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.desc)+'</div><div style="font-size:11px;color:#7a6a58">'+esc(e.date)+' ｜ '+esc(e.cat)+'</div></div>'+
+      '<div style="font-size:13px;flex-shrink:0;margin-right:4px">'+(e.cur==='JPY'?'¥':'NT$')+e.amt.toLocaleString()+'</div>'+
+      (em?ibt("startExpEdit('"+e.id+"')",'pen'):'')+
+      (em?ibt("delExp('"+e.id+"')",'trash','#b03830'):'')+'</div>';
+  }).join('');
+}
+function buildNewExpForm(){
+  var f=S.calcForm;
+  return card(stitle('新增支出')+
+    '<input class="inp" style="margin-bottom:8px" placeholder="日期（如 10/17）" value="'+esc(f.date)+'" oninput="S.calcForm.date=this.value"/>'+
+    '<input class="inp" style="margin-bottom:8px" placeholder="項目描述（必填）" value="'+esc(f.desc)+'" oninput="S.calcForm.desc=this.value"/>'+
+    '<div style="display:flex;gap:8px;margin-bottom:8px">'+
+      '<div style="position:relative;flex:2;display:flex;align-items:center">'+
+        '<input id="exp-amt-inp" class="inp" type="number" placeholder="金額（必填）" value="'+esc(f.amount)+'" oninput="S.calcForm.amount=this.value" style="width:100%;padding-right:36px"/>'+
+        '<button onclick="openCalcModal()" title="計算機" style="position:absolute;right:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(184,113,58,.1);border:1px solid rgba(184,113,58,.3)">'+ico(IC.calcico,14,'#b8713a')+'</button>'+
+      '</div>'+
+      '<select class="inp" style="flex:1" onchange="S.calcForm.cur=this.value"><option value="JPY"'+(f.cur==='JPY'?' selected':'')+'>¥ JPY</option><option value="TWD"'+(f.cur==='TWD'?' selected':'')+'>NT$</option></select></div>'+
+    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'+CATS.map(function(c){return'<button class="pill'+(f.cat===c?' on':'')+'" onclick="S.calcForm.cat=\''+c+'\';document.querySelectorAll(\'#exp-form-cats .pill\').forEach(function(p){p.classList.toggle(\'on\',p.textContent.trim()===\''+c+'\');})">'+c+'</button>';}).join('')+'</div>'+
+    '<button onclick="addExp()" style="width:100%;padding:12px;background:#b8713a;border-radius:10px;color:#fff;font-size:14px;font-weight:600">確認加入</button>');
+}
+function renderExps(){
+  var em=S.expsEdit,sn=S.expsNew;
+  var h=card(stitle('支出統計')+buildPie());
+  h+=card(stitle('支出明細')+buildExpsList()+'<div style="display:flex;justify-content:flex-end;margin-top:8px">'+fab(em,'S.expsEdit=!S.expsEdit;S.editId=null;renderExps()')+'</div>');
+  h+='<button onclick="S.expsNew=!S.expsNew;if(!S.expsNew)S.calcForm={date:\'\',cat:\'餐飲\',desc:\'\',amount:\'\',cur:\'JPY\'};renderExps()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:'+(sn?'#b8713a':'#fff')+';border:2px solid '+(sn?'#b8713a':'#ddd5c5')+';border-radius:12px;font-size:14px;font-weight:600;color:'+(sn?'#fff':'#b8713a')+';margin-bottom:10px">'+ico(sn?IC.x:IC.plus,16,sn?'#fff':'#b8713a')+' '+(sn?'取消新增':'＋ 新增支出')+'</button>';
+  if(sn)h+=buildNewExpForm();
+  document.getElementById('s-exps').innerHTML=h;
+}
+// ── Calculator modal ─────────────────────────────────────────────
+function openCalcModal(){
+  var cur=S.calcForm.amount;
+  S.calc={disp:cur&&parseFloat(cur)>0?cur:'0',prev:null,op:null,nxt:false};
+  var ov=document.getElementById('calc-overlay');
+  ov.style.display='flex';
+  updateCalcModal();
+}
+function closeCalcModal(){document.getElementById('calc-overlay').style.display='none';}
+function confirmCalc(){
+  S.calcForm.amount=S.calc.disp;
+  closeCalcModal();
+  var inp=document.getElementById('exp-amt-inp');
+  if(inp)inp.value=S.calc.disp;
+}
+function updateCalcModal(){
+  var cd=S.calc;
+  var el=document.getElementById('calc-disp-m');
+  var op=document.getElementById('calc-op-m');
+  if(el)el.textContent=parseFloat(cd.disp).toLocaleString('en',{maximumFractionDigits:2});
+  if(op)op.textContent=cd.op?(cd.prev+' '+cd.op):'';
+}
+function doCalc(b){
+  var cd=S.calc;
+  if(b==='AC'){cd.disp='0';cd.prev=null;cd.op=null;cd.nxt=false;}
+  else if(b==='⌫'){cd.disp=cd.disp.length>1?cd.disp.slice(0,-1):'0';}
+  else if(['+','-','×','÷'].indexOf(b)>-1){cd.prev=parseFloat(cd.disp);cd.op=b;cd.nxt=true;}
+  else if(b==='='){if(cd.op&&cd.prev!=null){var bv=parseFloat(cd.disp),r=cd.op==='+'?cd.prev+bv:cd.op==='-'?cd.prev-bv:cd.op==='×'?cd.prev*bv:bv?cd.prev/bv:0;cd.disp=String(parseFloat(r.toFixed(2)));cd.prev=null;cd.op=null;cd.nxt=false;}}
+  else if(b==='.'){if(cd.nxt){cd.disp='0.';cd.nxt=false;}else if(cd.disp.indexOf('.')<0)cd.disp+='.'; }
+  else{if(cd.nxt){cd.disp=b;cd.nxt=false;}else cd.disp=cd.disp==='0'?b:cd.disp.length>10?cd.disp:cd.disp+b;}
+  updateCalcModal();
+}
+function applyCalc(){S.calcForm.amount=S.calc.disp;renderExps();}
+function addExp(){var f=S.calcForm;if(!f.desc.trim()||!f.amount)return;S.exps.push({id:uid(),date:f.date,cat:f.cat,desc:f.desc,amt:parseFloat(f.amount),cur:f.cur});S.calcForm={date:'',cat:'餐飲',desc:'',amount:'',cur:'JPY'};S.calc={disp:'0',prev:null,op:null,nxt:false};S.expsNew=false;scheduleSave();renderExps();}
+function delExp(id){S.exps=S.exps.filter(function(e){return e.id!==id;});scheduleSave();renderExps();}
+function startExpEdit(id){S.editId=id;S.editVal={};renderExps();setTimeout(function(){var inp=document.querySelector('#s-exps input');if(inp)inp.focus();},50);}
+function commitExpEdit(id){var v=S.editVal;S.exps=S.exps.map(function(e){return e.id===id?{id:e.id,date:v.date!=null?v.date:e.date,cat:v.cat||e.cat,desc:v.desc!=null?v.desc:e.desc,amt:v.amount!=null?parseFloat(v.amount):e.amt,cur:v.cur||e.cur}:e;});S.editId=null;S.editVal={};scheduleSave();renderExps();}
+
+// ── PREP/LUG ────────────────────────────────────────────────────
+function toggleLugEdit(cat){S.lugEdit[cat]=!S.lugEdit[cat];S.editId=null;renderPrep();}
+function lugAddItem(cat){S.lug.push({id:uid(),cat:cat,t:'新增項目',done:false});scheduleSave();renderPrep();}
+function renderPrep(){
+  var sub=S.prepSub;
+  var h='<div style="display:flex;gap:8px;margin-bottom:14px">'+
+    [['prep','行前準備',S.prep.filter(function(i){return i.done;}).length,S.prep.length],['lug','行李清單',S.lug.filter(function(i){return i.done;}).length,S.lug.length]].map(function(k){
+      var on=sub===k[0];
+      return'<button onclick="switchPrepSub(\''+k[0]+'\')" style="flex:1;padding:11px 8px;border-radius:12px;background:'+(on?'#b8713a':'#fff')+';border:1px solid '+(on?'#b8713a':'#ddd5c5')+';text-align:center">'+
+        '<div style="font-size:13px;color:'+(on?'#fff':'#7a6a58')+';font-weight:'+(on?600:400)+'">'+k[1]+'</div>'+
+        '<div style="font-size:11px;color:'+(on?'rgba(255,255,255,.7)':'#b8a898')+';margin-top:2px">'+k[2]+'/'+k[3]+' 完成</div></button>';
+    }).join('')+'</div>';
+  if(sub==='prep'){
+    var em=S.prepEdit,done=S.prep.filter(function(i){return i.done;}).length;
+    h+=card(stitle('行前待辦')+pbar(done,S.prep.length)+
+      '<div id="prep-list">'+buildCheckList(S.prep,'prep',em)+'</div>'+
+      (em?'<button onclick="prepAddItem()" style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 12px;background:var(--surf);border-radius:8px;border:1px dashed var(--bd);width:100%;justify-content:center;font-size:13px;color:var(--mu)">'+ico(IC.plus,14,'#b8a898')+' 新增項目</button>':'')+
+      '<div style="display:flex;justify-content:flex-end;margin-top:8px">'+fab(em,'togglePrepEdit()')+'</div>');
+  }else{
+    var cats=[];S.lug.forEach(function(i){if(cats.indexOf(i.cat)<0)cats.push(i.cat);});
+    var done=S.lug.filter(function(i){return i.done;}).length;
+    h+='<div>'+pbar(done,S.lug.length)+'</div>';
+    cats.forEach(function(cat){
+      var items=S.lug.filter(function(i){return i.cat===cat;}),cd=items.filter(function(i){return i.done;}).length,em=!!S.lugEdit[cat];
+      var cq=jsq(cat);
+      h+=card('<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">'+stitle(cat)+'<span style="font-size:11px;color:#7a6a58">'+cd+'/'+items.length+'</span></div>'+
+        pbar(cd,items.length)+
+        '<div id="lug-'+cat.replace(/\s/g,'_')+'">'+buildCheckList(items,'lug:'+cat,em)+'</div>'+
+        (em?'<button onclick="lugAddItem(\''+cq+'\')" style="display:flex;align-items:center;gap:6px;margin-top:8px;padding:8px 12px;background:var(--surf);border-radius:8px;border:1px dashed var(--bd);width:100%;justify-content:center;font-size:13px;color:var(--mu)">'+ico(IC.plus,14,'#b8a898')+' 新增項目</button>':'')+
+        '<div style="display:flex;justify-content:flex-end;margin-top:8px">'+fab(em,"toggleLugEdit('"+cq+"')")+'</div>');
+    });
+  }
+  document.getElementById('s-prep').innerHTML=h;
+  if(S.editId){setTimeout(function(){var inp=document.getElementById('inp-'+S.editId);if(inp){inp.focus();inp.setSelectionRange(inp.value.length,inp.value.length);}},50);}
+}
+function switchPrepSub(s){S.prepSub=s;S.prepEdit=false;S.lugEdit={};S.editId=null;renderPrep();}
+function togglePrepEdit(){S.prepEdit=!S.prepEdit;S.editId=null;renderPrep();}
+function prepAddItem(){S.prep.push({id:uid(),t:'新增項目',done:false,urg:false});scheduleSave();renderPrep();}
+function buildCheckList(items,listKey,em){
+  var lq=jsq(listKey);
+  return items.map(function(it){
+    var iid=it.id, tq=jsq(it.t);
+    if(S.editId===it.id)return '<div class="row-item">'+
+      '<div class="chk-box'+(it.done?' done':'')+'">'+ico(IC.chk,11,'#fff')+'</div>'+
+      sortBtns("prepMv('"+lq+"','"+iid+"','up')","prepMv('"+lq+"','"+iid+"','dn')")+
+      '<input id="inp-'+iid+'" class="inp" value="'+esc(S.editVal)+'" style="flex:1" oninput="S.editVal=this.value" onkeydown="handleEditKey(event,\'prep\',\''+lq+'\',\''+iid+'\')" />'+
+      ibt("commitEdit('prep','"+lq+"','"+iid+"')",'chk','#5a9048')+
+      ibt("cancelEdit()",'x','#b8a898')+'</div>';
+    return '<div class="row-item">'+
+      '<button class="chk-box'+(it.done?' done':'')+'" onclick="toggleCheck(\''+lq+'\',\''+iid+'\')">'+ico(IC.chk,11,'#fff')+'</button>'+
+      sortBtns("prepMv('"+lq+"','"+iid+"','up')","prepMv('"+lq+"','"+iid+"','dn')")+
+      '<span style="flex:1;font-size:13px;color:'+(it.done?'#b8a898':'#2a2218')+';text-decoration:'+(it.done?'line-through':'none')+';line-height:1.55">'+
+        (it.urg&&!it.done?'<span style="color:#c08830;margin-right:3px">⚠️</span>':'')+esc(it.t)+'</span>'+
+      (em?ibt("startEdit('"+iid+"','"+tq+"','prep')",'pen'):'')+
+      (em?ibt("prepDel('"+lq+"','"+iid+"')",'trash','#b03830'):'')+'</div>';
+  }).join('');
+}
+function toggleCheck(listKey,id){
+  var list=listKey==='prep'?S.prep:S.lug;
+  var it=list.find(function(i){return i.id===id;});if(it)it.done=!it.done;
+  scheduleSave();renderPrep();
+}
+function prepMv(listKey,id,dir){
+  var list=listKey==='prep'?S.prep:S.lug;
+  var a=list,idx=a.findIndex(function(i){return i.id===id;}),ni=dir==='up'?idx-1:idx+1;
+  if(ni<0||ni>=a.length)return;
+  if(listKey!=='prep'&&a[ni].cat!==a[idx].cat)return;
+  var tmp=a[idx];a[idx]=a[ni];a[ni]=tmp;
+  scheduleSave();renderPrep();
+}
+function prepDel(listKey,id){
+  if(listKey==='prep')S.prep=S.prep.filter(function(i){return i.id!==id;});
+  else S.lug=S.lug.filter(function(i){return i.id!==id;});
+  scheduleSave();renderPrep();
+}
+
+// ── OTHER ───────────────────────────────────────────────────────
+function renderOther(){
+  var h='';
+  S.drive.forEach(function(s,si){
+    h+='<div class="card" style="padding:0;overflow:hidden">'+
+      '<button onclick="S.drive['+si+'].open=!S.drive['+si+'].open;renderOther()" style="display:flex;align-items:center;gap:10px;padding:14px 16px;width:100%;text-align:left">'+
+        '<span style="font-size:17px">'+s.icon+'</span>'+
+        '<span style="flex:1;font-size:14px;font-weight:500">'+esc(s.title)+'</span>'+
+        '<span style="transform:'+(s.open?'rotate(90deg)':'rotate(0)')+';transition:transform .2s;display:flex">'+ico(IC.cr,16,'#b8a898')+'</span>'+
+      '</button>'+
+      (s.open?'<div style="padding:4px 16px 14px;border-top:1px solid #ddd5c5">'+
+        s.items.map(function(item){return'<div style="display:flex;gap:8px;padding:4px 0;align-items:flex-start"><span style="color:#b8713a;font-size:14px;flex-shrink:0;margin-top:1px">·</span><span style="font-size:13px;color:#7a6a58;line-height:1.6">'+esc(item)+'</span></div>';}).join('')+
+      '</div>':'')+
+    '</div>';
+  });
+  h+=card(stitle('緊急聯絡資訊')+
+    '<button onclick="S.emrg.push({id:uid(),label:\'\',num:\'\'});renderOther()" style="display:flex;align-items:center;gap:4px;padding:4px 10px;background:#b8713a;border-radius:6px;float:right;margin-bottom:8px">'+ico(IC.plus,13,'#fff')+'<span style="font-size:12px;color:#fff">新增</span></button>'+
+    '<div style="clear:both"></div>'+
+    S.emrg.map(function(ec){
+      if(S.emrgEid===ec.id)return '<div style="padding:8px 0;border-bottom:1px solid #ddd5c5">'+
+        '<div style="display:flex;flex-direction:column;gap:6px">'+
+        '<input class="inp" placeholder="名稱" value="'+esc(S.emrgVal.label!=null?S.emrgVal.label:ec.label)+'" oninput="S.emrgVal.label=this.value"/>'+
+        '<input class="inp" placeholder="號碼" value="'+esc(S.emrgVal.num!=null?S.emrgVal.num:ec.num)+'" oninput="S.emrgVal.num=this.value"/>'+
+        '<div style="display:flex;gap:6px">'+
+          ibt("commitEmrg('"+ec.id+"')",'chk','#5a9048')+
+          ibt("cancelEmrg()",'x','#b8a898')+'</div></div></div>';
+      return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ddd5c5">'+
+        ico(IC.phone,14,'#b8713a')+
+        '<div style="flex:1"><div style="font-size:13px">'+esc(ec.label||'（未命名）')+'</div><div style="font-size:12px;color:#7a6a58">'+esc(ec.num||'—')+'</div></div>'+
+        ibt("startEmrgEdit('"+ec.id+"')",'pen')+
+        ibt("delEmrg('"+ec.id+"')",'trash','#b03830')+'</div>';
+    }).join(''));
+  h+=card(stitle('備忘錄')+'<textarea style="width:100%;min-height:200px;background:#ede8de;border:1px solid #ddd5c5;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.75;resize:vertical" oninput="S.memo=this.value;scheduleSave()">'+esc(S.memo)+'</textarea>');
+  document.getElementById('s-other').innerHTML=h;
+}
+function commitEmrg(id){var v=S.emrgVal;S.emrg=S.emrg.map(function(e){return e.id===id?{id:e.id,label:v.label!=null?v.label:e.label,num:v.num!=null?v.num:e.num}:e;});S.emrgEid=null;S.emrgVal={};scheduleSave();renderOther();}
+function cancelEmrg(){S.emrgEid=null;S.emrgVal={};renderOther();}
+function startEmrgEdit(id){var ec=S.emrg.find(function(e){return e.id===id;});if(!ec)return;S.emrgEid=id;S.emrgVal={label:ec.label,num:ec.num};renderOther();}
+function delEmrg(id){S.emrg=S.emrg.filter(function(e){return e.id!==id;});scheduleSave();renderOther();}
+
+// ── Generic edit helpers ────────────────────────────────────────
+function startEdit(id,val,list){S.editId=id;S.editVal=val;S.editList=list;if(list==='itin')renderItin();else renderPrep();}
+function cancelEdit(){S.editId=null;S.editVal='';if(S.editList==='itin')renderItin();else renderPrep();}
+function commitEdit(type,context,id){
+  if(type==='itin'){var d=S.itin.find(function(x){return x.id===context;});if(d)d.items=d.items.map(function(i){return i.id===id?Object.assign({},i,{t:S.editVal}):i;});}
+  else{if(context==='prep')S.prep=S.prep.map(function(i){return i.id===id?Object.assign({},i,{t:S.editVal}):i;});else S.lug=S.lug.map(function(i){return i.id===id?Object.assign({},i,{t:S.editVal}):i;});}
+  S.editId=null;S.editVal='';scheduleSave();
+  if(type==='itin')renderItin();else renderPrep();
+}
+function handleEditKey(e,type,context,id){if(e.key==='Enter')commitEdit(type,context,id);else if(e.key==='Escape')cancelEdit();}
+
+// ══ Init ═══════════════════════════════════════════════════════
+document.getElementById('tbar').innerHTML=buildTabBar();
+renderHome();
+renderItin();  // pre-render all tabs
+renderExps();
+renderPrep();
+renderOther();
+// ══ PWA 主畫面圖示（用 Canvas 動態生成） ══════════════════════
+(function(){
+  try{
+    var c=document.createElement('canvas');c.width=512;c.height=512;
+    var x=c.getContext('2d');
+    // 背景
+    x.fillStyle='#f5f0e8';x.beginPath();x.roundRect(0,0,512,512,80);x.fill();
+    // 鳥居
+    x.strokeStyle='#b8713a';x.lineCap='round';
+    // 上弧樑
+    x.lineWidth=26;x.beginPath();x.moveTo(50,160);x.quadraticCurveTo(256,90,462,160);x.stroke();
+    // 第二橫樑
+    x.lineWidth=22;x.beginPath();x.moveTo(82,222);x.lineTo(430,222);x.stroke();
+    // 左柱
+    x.lineWidth=26;x.beginPath();x.moveTo(158,205);x.lineTo(158,440);x.stroke();
+    // 右柱
+    x.lineWidth=26;x.beginPath();x.moveTo(354,205);x.lineTo(354,440);x.stroke();
+    // 左撐腳
+    x.lineWidth=16;x.beginPath();x.moveTo(158,370);x.lineTo(108,424);x.stroke();
+    // 右撐腳
+    x.lineWidth=16;x.beginPath();x.moveTo(354,370);x.lineTo(404,424);x.stroke();
+    // 加入 apple-touch-icon
+    var lk=document.createElement('link');lk.rel='apple-touch-icon';lk.href=c.toDataURL('image/png');document.head.appendChild(lk);
+    // favicon
+    var lk2=document.createElement('link');lk2.rel='icon';lk2.href=c.toDataURL('image/png');document.head.appendChild(lk2);
+  }catch(e){}
+  // Web App Manifest (inline)
+  var mf={name:'九州之旅 2026',short_name:'九州之旅',start_url:'.',display:'standalone',background_color:'#f5f0e8',theme_color:'#b8713a',icons:[{src:'',sizes:'512x512',type:'image/png'}]};
+  try{
+    var c2=document.createElement('canvas');c2.width=512;c2.height=512;var x2=c2.getContext('2d');
+    x2.fillStyle='#f5f0e8';x2.beginPath();x2.roundRect(0,0,512,512,80);x2.fill();
+    x2.strokeStyle='#b8713a';x2.lineCap='round';
+    x2.lineWidth=26;x2.beginPath();x2.moveTo(50,160);x2.quadraticCurveTo(256,90,462,160);x2.stroke();
+    x2.lineWidth=22;x2.beginPath();x2.moveTo(82,222);x2.lineTo(430,222);x2.stroke();
+    x2.lineWidth=26;x2.beginPath();x2.moveTo(158,205);x2.lineTo(158,440);x2.stroke();
+    x2.lineWidth=26;x2.beginPath();x2.moveTo(354,205);x2.lineTo(354,440);x2.stroke();
+    x2.lineWidth=16;x2.beginPath();x2.moveTo(158,370);x2.lineTo(108,424);x2.stroke();
+    x2.lineWidth=16;x2.beginPath();x2.moveTo(354,370);x2.lineTo(404,424);x2.stroke();
+    mf.icons[0].src=c2.toDataURL('image/png');
+  }catch(e){}
+  var blob=new Blob([JSON.stringify(mf)],{type:'application/manifest+json'});
+  var lk3=document.createElement('link');lk3.rel='manifest';lk3.href=URL.createObjectURL(blob);document.head.appendChild(lk3);
+})();
+// ══ Load from Firebase ══════════════════════════════════════════
+dbLoad(function(d){
+  if(d){
+    if(d.itin&&d.itin.length)S.itin=d.itin;
+    if(d.prep&&d.prep.length)S.prep=d.prep;
+    if(d.lug&&d.lug.length)S.lug=d.lug;
+    if(d.exps)S.exps=d.exps;
+    if(d.emrg&&d.emrg.length)S.emrg=d.emrg;
+    if(d.memo!=null)S.memo=d.memo;
+    renderHome();renderItin();renderExps();renderPrep();renderOther();
+  }
+  S.ready=true;
+});
+</script>
+</body>
+</html>
