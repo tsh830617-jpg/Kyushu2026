@@ -186,7 +186,7 @@ var D_LUG=[
 var D_MEMO="🛍 購物清單\n- 無印良品：國際轉接頭\n- Hoka or ON 鞋\n- Snow Peak！\n- UQ：內衣褲/發熱衣/側背包\n- 保健品：DHC/EVE/鋅/鐵\n- Mont-bell：外套/折疊側背包\n- Orbis\n\n🍽 吃的名單\n- 牛舌 AGITO HIRAO（福岡市中央区平尾2-15-1）\n  需預約｜地鐵N綠線轉T紅線";
 var DRIVE=[
   {id:"s1",icon:"🚦",title:"日本交通規則",open:false,items:["靠左行駛（與台灣相反！）","紅燈禁止右轉（除非有箭頭燈）","全程需繫安全帶，後座亦同","禁止使用手機駕車，酒精零容忍","速限：市區40-60 / 高速100 km/h"]},
-  {id:"s2",icon:"🚗",title:"租車注意事項",open:false,items:["備妥：台灣駕照正本＋日本譯本＋國際駕照＋護照","建議加購全險（CDW）及兩人駕駛保險","確認ETC已激活，還車前加滿油","取車時拍照記錄刮痕存證"]},
+    {f:'s2',icon:"🚗",title:"租車注意事項",open:false,items:["備妥：台灣駕照正本＋日本譯本＋國際駕照＋護照","建議加購全險（CDW）及兩人駕駛保險","確認ETC已開通，還車前加滿油","取車時拍照記錄刮痕存證"]},
   {id:"s3",icon:"⛽",title:"加油注意事項",open:false,items:["九州常見：ENEOS、出光、コスモ石油","油種：通常選レギュラー（92）","自助：選油種→插槍→付款→加油","郊區加油站較少，建議提早加油"]},
   {id:"s4",icon:"🅿️",title:"停車注意事項",open:false,items:["推薦Times、NPC、三井Repark","阿蘇火山口、草千里需收費（備零錢）","路邊停車確認標誌（黃線=禁停）","自駕日停車費總計約¥2000-3000"]},
   {id:"s5",icon:"🌋",title:"阿蘇注意事項",open:false,items:["出發前確認火山活動：aso.ne.jp","如管制需備用行程（熊本城/水前寺）","建議戴口罩防火山氣體","進山區前下載Google Maps離線地圖"]},
@@ -581,14 +581,16 @@ function renderOther(){
         '<div style="display:flex;flex-direction:column;gap:6px">'+
         '<input class="inp" placeholder="名稱" value="'+esc(S.emrgVal.label!=null?S.emrgVal.label:ec.label)+'" oninput="S.emrgVal.label=this.value"/>'+
         '<input class="inp" placeholder="號碼" value="'+esc(S.emrgVal.num!=null?S.emrgVal.num:ec.num)+'" oninput="S.emrgVal.num=this.value"/>'+
-        '<div style="display:flex;gap:6px">'+
+        '<div style="display:flex;gap:6px;align-items:center">'+
           ibt("commitEmrg('"+ec.id+"')",'chk','#5a9048')+
-          ibt("cancelEmrg()",'x','#b8a898')+'</div></div></div>';
+          ibt("cancelEmrg()",'x','#b8a898')+
+          '<div style="flex:1"></div>'+
+          '<button onclick="if(confirm(\'確定刪除？\'))delEmrg(\''+ec.id+'\')" style="display:flex;align-items:center;gap:4px;padding:5px 10px;border-radius:6px;background:#fff0f0;border:1px solid #f0c0c0;font-size:11px;color:#b03830;font-family:inherit">'+ico(IC.trash,13,'#b03830')+' 刪除</button>'+
+        '</div></div></div>';
       return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ddd5c5">'+
         ico(IC.phone,14,'#b8713a')+
         '<div style="flex:1"><div style="font-size:13px">'+esc(ec.label||'（未命名）')+'</div><div style="font-size:12px;color:#7a6a58">'+esc(ec.num||'—')+'</div></div>'+
-        ibt("startEmrgEdit('"+ec.id+"')",'pen')+
-        ibt("delEmrg('"+ec.id+"')",'trash','#b03830')+'</div>';
+        ibt("startEmrgEdit('"+ec.id+"')",'pen')+'</div>';
     }).join(''));
   h+=card(stitle('備忘錄')+'<textarea style="width:100%;min-height:200px;background:#ede8de;border:1px solid #ddd5c5;border-radius:8px;padding:10px 12px;font-size:13px;line-height:1.75;resize:vertical" oninput="S.memo=this.value;scheduleSave()">'+esc(S.memo)+'</textarea>');
   document.getElementById('s-other').innerHTML=h;
