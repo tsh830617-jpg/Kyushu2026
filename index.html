@@ -49,9 +49,23 @@ select option{background:#fff}
 .cbtn.fn{background:var(--surf);color:var(--sub)}
 .cbtn.op{background:var(--a);color:#fff;border-color:var(--ad)}
 .cbtn.nm{background:var(--card);color:var(--tx)}
+/* Expense modal */
+.emcat{display:flex;flex-direction:column;align-items:center;gap:4px;padding:8px 12px;border-radius:12px;border:1px solid var(--bd);background:var(--surf);cursor:pointer;min-width:56px;font-size:11px;color:var(--sub);font-family:inherit}
+.emcat.on{background:var(--tx);color:#fff;border-color:var(--tx)}
+.emcur{padding:6px 14px;border-radius:20px;border:1px solid var(--bd);background:var(--surf);font-size:13px;font-weight:500;color:var(--sub);cursor:pointer;font-family:inherit}
+.emcur.on{background:var(--a);color:#fff;border-color:var(--ad)}
+.npbtn{border-radius:12px;padding:0;font-size:22px;font-weight:400;border:1px solid var(--bd);background:var(--card);color:var(--tx);cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;height:56px}
+.npbtn:active{opacity:.7}
+.npbtn.del{background:var(--surf)}
 </style>
 </head>
 <body>
+<!-- Expense entry/edit modal -->
+<div id="exp-overlay" onclick="if(event.target===this)closeExpModal()" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.5);z-index:300;align-items:flex-end;justify-content:center">
+  <div id="exp-modal-box" style="background:#fff;border-radius:20px 20px 0 0;width:100%;max-width:430px;padding:0 0 28px;max-height:92vh;overflow-y:auto">
+    <!-- rendered by JS -->
+  </div>
+</div>
 <div id="calc-overlay" onclick="if(event.target===this)closeCalcModal()" style="display:none;position:fixed;top:0;right:0;bottom:0;left:0;background:rgba(0,0,0,.45);z-index:200;align-items:flex-end;justify-content:center">
   <div style="background:#fff;border-radius:16px 16px 0 0;padding:18px 16px 24px;width:100%;max-width:430px">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
@@ -204,6 +218,7 @@ var S={
   itinDay:0, itinEdit:false, itinTitleEdit:false, itinTitleVal:'',
   prepSub:'prep', prepEdit:false, lugEdit:{},
   expsEdit:false, expsNew:false,
+  em:{mode:'add',eid:null,amt:'0',cat:'餐飲',cur:'JPY',desc:'',date:'',prev:null,op:null,nxt:false},
   // edit in-place
   editId:null, editVal:'', editList:'',
   // emrg edit
@@ -382,8 +397,13 @@ function itinAddItem(){var d=S.itin[S.itinDay];d.items.push({id:uid(),t:'新增�
 function renderItinItems2(){var d=S.itin[S.itinDay];document.getElementById('itin-items').innerHTML=buildItinItems(d,S.itinEdit);}
 
 // ── EXPS ────────────────────────────────────────────────────────
-var CC={餐飲:'#b03830',交通:'#5090b8',購物:'#b09040',門票:'#5a9048',住宿:'#8060a8',機票:'#4080b8',其他:'#b8a898'};
-var CATS=['餐飲','交通','購物','門票','住宿','機票','其他'];
+var EM_CATS=[
+  {k:'餐飲',e:'🍜',c:'#b03830'},{k:'交通',e:'🚇',c:'#5090b8'},{k:'票券',e:'🎟️',c:'#5a9048'},
+  {k:'購物',e:'🛍️',c:'#b09040'},{k:'住宿',e:'🏨',c:'#8060a8'},{k:'機票',e:'✈️',c:'#4080b8'},{k:'其他',e:'✨',c:'#b8a898'}
+];
+var EM_CURS=['JPY','TWD','USD','HKD'];
+var CC=(function(){var o={};EM_CATS.forEach(function(c){o[c.k]=c.c;});return o;})();
+var CATS=EM_CATS.map(function(c){return c.k;});
 function twd(e){return e.cur==='TWD'?e.amt:e.amt/4.5;}
 function buildPie(){
   var totals={},total=S.exps.reduce(function(s,e){return s+twd(e);},0);
@@ -401,70 +421,139 @@ function buildPie(){
 }
 function buildExpsList(){
   var em=S.expsEdit;
-  if(!S.exps.length)return '<div style="font-size:13px;color:#b8a898;text-align:center;padding:12px 0">尚無記錄</div>';
+  if(!S.exps.length)return '<div style="font-size:13px;color:#b8a898;text-align:center;padding:16px 0">尚無記錄</div>';
   return S.exps.map(function(e){
-    if(S.editId===e.id){
-      var v=S.editVal||{};
-      return '<div style="padding:10px 0;border-bottom:1px solid #ddd5c5">'+
-        '<div style="display:flex;gap:6px;margin-bottom:6px">'+
-          '<input class="inp" style="flex:1" placeholder="日期" value="'+esc(v.date!=null?v.date:e.date)+'" oninput="S.editVal.date=this.value"/>'+
-          '<input class="inp" style="flex:1" type="number" placeholder="金額" value="'+esc(v.amount!=null?v.amount:e.amt)+'" oninput="S.editVal.amount=this.value"/>'+
-          '<select class="inp" style="flex:.8;padding:7px 4px" onchange="S.editVal.cur=this.value"><option value="JPY"'+((v.cur||e.cur)==='JPY'?' selected':'')+'>¥ JPY</option><option value="TWD"'+((v.cur||e.cur)==='TWD'?' selected':'')+'>NT$</option></select></div>'+
-        '<input class="inp" style="margin-bottom:6px" placeholder="描述" value="'+esc(v.desc!=null?v.desc:e.desc)+'" oninput="S.editVal.desc=this.value"/>'+
-        '<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:8px">'+CATS.map(function(c){var on=(v.cat||e.cat)===c;return'<button class="pill'+(on?' on':'')+'" onclick="S.editVal.cat=\''+jsq(c)+'\';renderExps()">'+esc(c)+'</button>';}).join('')+'</div>'+
-        '<div style="display:flex;gap:6px">'+ibt("commitExpEdit('"+e.id+"')",'chk','#5a9048')+ibt("cancelEdit()",'x','#b8a898')+'</div></div>';
-    }
-    return '<div style="display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #ddd5c5">'+
-      '<div style="width:7px;height:7px;border-radius:50%;background:'+(CC[e.cat]||'#b8a898')+';flex-shrink:0"></div>'+
-      '<div style="flex:1;min-width:0"><div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.desc)+'</div><div style="font-size:11px;color:#7a6a58">'+esc(e.date)+' ｜ '+esc(e.cat)+'</div></div>'+
-      '<div style="font-size:13px;flex-shrink:0;margin-right:4px">'+(e.cur==='JPY'?'¥':'NT$')+e.amt.toLocaleString()+'</div>'+
-      (em?ibt("startExpEdit('"+e.id+"')",'pen'):'')+
-      (em?ibt("delExp('"+e.id+"')",'trash','#b03830'):'')+'</div>';
+    var catObj=EM_CATS.find(function(c){return c.k===e.cat;})||{e:'✨',c:'#b8a898'};
+    return '<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #ddd5c5">'+
+      '<div style="width:34px;height:34px;border-radius:10px;background:'+catObj.c+'22;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:16px">'+catObj.e+'</div>'+
+      '<div style="flex:1;min-width:0">'+
+        '<div style="font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+esc(e.desc||e.cat)+'</div>'+
+        '<div style="font-size:11px;color:#b8a898">'+(e.date?esc(e.date)+' · ':'')+esc(e.cat)+'</div>'+
+      '</div>'+
+      '<div style="text-align:right;flex-shrink:0">'+
+        '<div style="font-size:14px;font-weight:600;color:#2a2218">'+(e.cur==='JPY'?'¥':e.cur==='TWD'?'NT$':e.cur+' ')+e.amt.toLocaleString()+'</div>'+
+        '<div style="font-size:10px;color:#b8a898">'+e.cur+'</div>'+
+      '</div>'+
+      (em?'<button onclick="openEditExp(\''+e.id+'\')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#ede8de;border:1px solid #ddd5c5;flex-shrink:0">'+ico(IC.pen,14,'#7a6a58')+'</button>':'')+
+      (em?'<button onclick="delExp(\''+e.id+'\')" style="width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:#fff0f0;border:1px solid #f0c0c0;flex-shrink:0">'+ico(IC.trash,14,'#b03830')+'</button>':'')+
+    '</div>';
   }).join('');
 }
-function buildNewExpForm(){
-  var f=S.calcForm;
-  return card(stitle('新增支出')+
-    '<input class="inp" style="margin-bottom:8px" placeholder="日期（如 10/17）" value="'+esc(f.date)+'" oninput="S.calcForm.date=this.value"/>'+
-    '<input class="inp" style="margin-bottom:8px" placeholder="項目描述（必填）" value="'+esc(f.desc)+'" oninput="S.calcForm.desc=this.value"/>'+
-    '<div style="display:flex;gap:8px;margin-bottom:8px">'+
-      '<div style="position:relative;flex:2;display:flex;align-items:center">'+
-        '<input id="exp-amt-inp" class="inp" type="number" placeholder="金額（必填）" value="'+esc(f.amount)+'" oninput="S.calcForm.amount=this.value" style="width:100%;padding-right:36px"/>'+
-        '<button onclick="openCalcModal()" title="計算機" style="position:absolute;right:4px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;border-radius:6px;background:rgba(184,113,58,.1);border:1px solid rgba(184,113,58,.3)">'+ico(IC.calcico,14,'#b8713a')+'</button>'+
-      '</div>'+
-      '<select class="inp" style="flex:1" onchange="S.calcForm.cur=this.value"><option value="JPY"'+(f.cur==='JPY'?' selected':'')+'>¥ JPY</option><option value="TWD"'+(f.cur==='TWD'?' selected':'')+'>NT$</option></select></div>'+
-    '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">'+CATS.map(function(c){return'<button class="pill'+(f.cat===c?' on':'')+'" onclick="S.calcForm.cat=\''+c+'\';document.querySelectorAll(\'#exp-form-cats .pill\').forEach(function(p){p.classList.toggle(\'on\',p.textContent.trim()===\''+c+'\');})">'+c+'</button>';}).join('')+'</div>'+
-    '<button onclick="addExp()" style="width:100%;padding:12px;background:#b8713a;border-radius:10px;color:#fff;font-size:14px;font-weight:600">確認加入</button>');
-}
 function renderExps(){
-  var em=S.expsEdit,sn=S.expsNew;
+  var em=S.expsEdit;
+  var tTWD=S.exps.reduce(function(s,e){return s+(e.cur==='TWD'?e.amt:e.cur==='JPY'?e.amt/4.5:e.cur==='USD'?e.amt*31:e.cur==='HKD'?e.amt*4:e.amt);},0);
+  var tJPY=S.exps.reduce(function(s,e){return s+(e.cur==='JPY'?e.amt:e.cur==='TWD'?e.amt*4.5:e.cur==='USD'?e.amt*140:e.cur==='HKD'?e.amt*18:e.amt*4.5);},0);
   var h=card(stitle('支出統計')+buildPie());
-  h+=card(stitle('支出明細')+buildExpsList()+'<div style="display:flex;justify-content:flex-end;margin-top:8px">'+fab(em,'S.expsEdit=!S.expsEdit;S.editId=null;renderExps()')+'</div>');
-  h+='<button onclick="S.expsNew=!S.expsNew;if(!S.expsNew)S.calcForm={date:\'\',cat:\'餐飲\',desc:\'\',amount:\'\',cur:\'JPY\'};renderExps()" style="display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:13px;background:'+(sn?'#b8713a':'#fff')+';border:2px solid '+(sn?'#b8713a':'#ddd5c5')+';border-radius:12px;font-size:14px;font-weight:600;color:'+(sn?'#fff':'#b8713a')+';margin-bottom:10px">'+ico(sn?IC.x:IC.plus,16,sn?'#fff':'#b8713a')+' '+(sn?'取消新增':'＋ 新增支出')+'</button>';
-  if(sn)h+=buildNewExpForm();
+  h+=card(
+    '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">'+
+      stitle('支出明細')+
+      '<div style="display:flex;gap:6px">'+
+        '<button onclick="openAddExp()" style="display:flex;align-items:center;gap:4px;padding:5px 12px;background:#b8713a;border-radius:20px;font-size:12px;font-weight:600;color:#fff;font-family:inherit">+ 新增</button>'+
+        fab(em,'toggleExpsEdit()')+
+      '</div>'+
+    '</div>'+
+    buildExpsList()+
+    '<div style="margin-top:12px;padding:10px 12px;background:#ede8de;border-radius:8px">'+
+      '<div style="display:flex;justify-content:space-between;margin-bottom:3px"><span style="font-size:11px;color:#7a6a58">¥ 總計（日圓換算）</span><span style="font-size:12px;color:#2a2218">¥'+Math.round(tJPY).toLocaleString()+'</span></div>'+
+      '<div style="display:flex;justify-content:space-between"><span style="font-size:12px;color:#7a6a58">NT$ 台幣約</span><span style="font-size:15px;color:#b8713a;font-weight:700">NT$'+Math.round(tTWD).toLocaleString()+'</span></div>'+
+    '</div>');
   document.getElementById('s-exps').innerHTML=h;
 }
-// ── Calculator modal ─────────────────────────────────────────────
-function openCalcModal(){
-  var cur=S.calcForm.amount;
-  S.calc={disp:cur&&parseFloat(cur)>0?cur:'0',prev:null,op:null,nxt:false};
-  var ov=document.getElementById('calc-overlay');
-  ov.style.display='flex';
-  updateCalcModal();
+// ── Expense Modal ─────────────────────────────────────────────────
+function openAddExp(){
+  var today=new Date();var m=today.getMonth()+1,d=today.getDate();
+  S.em={mode:'add',eid:null,amt:'0',cat:'餐飲',cur:'JPY',desc:'',date:'10/'+( d<10?'0'+d:d),prev:null,op:null,nxt:false};
+  document.getElementById('exp-overlay').style.display='flex';
+  renderExpModal();
 }
-function closeCalcModal(){document.getElementById('calc-overlay').style.display='none';}
-function confirmCalc(){
-  S.calcForm.amount=S.calc.disp;
-  closeCalcModal();
-  var inp=document.getElementById('exp-amt-inp');
-  if(inp)inp.value=S.calc.disp;
+function openEditExp(id){
+  var e=S.exps.find(function(x){return x.id===id;});if(!e)return;
+  S.em={mode:'edit',eid:id,amt:String(e.amt),cat:e.cat,cur:e.cur,desc:e.desc||'',date:e.date||'',prev:null,op:null,nxt:false};
+  document.getElementById('exp-overlay').style.display='flex';
+  renderExpModal();
 }
-function updateCalcModal(){
-  var cd=S.calc;
-  var el=document.getElementById('calc-disp-m');
-  var op=document.getElementById('calc-op-m');
-  if(el)el.textContent=parseFloat(cd.disp).toLocaleString('en',{maximumFractionDigits:2});
-  if(op)op.textContent=cd.op?(cd.prev+' '+cd.op):'';
+function closeExpModal(){document.getElementById('exp-overlay').style.display='none';}
+function emCalc(b){
+  var m=S.em;
+  if(b==='C'){m.amt='0';m.prev=null;m.op=null;m.nxt=false;}
+  else if(b==='⌫'){m.amt=m.amt.length>1?m.amt.slice(0,-1):'0';}
+  else if(b==='.'){if(!m.amt.includes('.'))m.amt+='.'; }
+  else{if(m.nxt){m.amt=b;m.nxt=false;}else m.amt=m.amt==='0'?b:m.amt.length>10?m.amt:m.amt+b;}
+  var disp=document.getElementById('em-disp');
+  if(disp)disp.textContent=parseFloat(m.amt||0).toLocaleString('en',{maximumFractionDigits:2});
+}
+function emSetCat(c){S.em.cat=c;renderExpModal();}
+function emSetCur(c){S.em.cur=c;renderExpModal();}
+function saveExpModal(){
+  var m=S.em, amt=parseFloat(m.amt)||0;
+  if(!amt)return;
+  var entry={id:m.eid||uid(),date:m.date,cat:m.cat,desc:m.desc,amt:amt,cur:m.cur};
+  if(m.mode==='add'){S.exps.push(entry);}
+  else{S.exps=S.exps.map(function(e){return e.id===m.eid?entry:e;});}
+  closeExpModal();scheduleSave();renderExps();
+}
+function renderExpModal(){
+  var m=S.em;
+  var catObj=EM_CATS.find(function(c){return c.k===m.cat;})||EM_CATS[0];
+  var curSym=m.cur==='JPY'?'¥':m.cur==='TWD'?'NT$':m.cur==='USD'?'$':'HK$';
+  var dispAmt=parseFloat(m.amt||0).toLocaleString('en',{maximumFractionDigits:2});
+  var box=document.getElementById('exp-modal-box');
+  if(!box)return;
+  box.innerHTML=
+    // Header
+    '<div style="display:flex;align-items:center;justify-content:space-between;padding:18px 20px 0">'+
+      '<span style="font-size:16px;font-weight:700;color:#2a2218">'+(m.mode==='add'?'新增記帳':'編輯記帳')+'</span>'+
+      '<button onclick="closeExpModal()" style="width:32px;height:32px;border-radius:50%;background:#ede8de;border:1px solid #ddd5c5;display:flex;align-items:center;justify-content:center;font-size:18px;color:#7a6a58">×</button>'+
+    '</div>'+
+    // Display area
+    '<div style="margin:14px 16px 0;background:linear-gradient(135deg,#f0ebe2,#e8e0d4);border-radius:14px;padding:16px 18px;min-height:80px;display:flex;flex-direction:column;justify-content:space-between">'+
+      '<div style="display:flex;align-items:center;gap:6px">'+
+        '<span style="font-size:18px">'+catObj.e+'</span>'+
+        '<span style="font-size:12px;color:#7a6a58">'+esc(m.cat)+' · '+m.cur+'</span>'+
+      '</div>'+
+      '<div style="display:flex;align-items:flex-end;justify-content:space-between;margin-top:8px">'+
+        '<div id="em-disp" style="font-size:32px;font-weight:700;color:#2a2218;line-height:1">'+dispAmt+'</div>'+
+        '<div style="text-align:right">'+
+          '<div style="font-size:12px;color:#b8a898">'+m.cur+'</div>'+
+          (m.desc?'<div style="font-size:12px;color:#7a6a58">'+esc(m.desc)+'</div>':'')+
+        '</div>'+
+      '</div>'+
+    '</div>'+
+    // Description + Date inputs
+    '<div style="padding:12px 16px 0;display:flex;gap:8px">'+
+      '<input class="inp" style="flex:1" placeholder="描述（如：午餐）" value="'+esc(m.desc)+'" oninput="S.em.desc=this.value"/>'+
+      '<input class="inp" style="width:80px" placeholder="日期" value="'+esc(m.date)+'" oninput="S.em.date=this.value"/>'+
+    '</div>'+
+    // Category
+    '<div style="padding:12px 16px 0">'+
+      '<div style="font-size:11px;color:#b8a898;letter-spacing:1px;margin-bottom:8px">類型</div>'+
+      '<div style="display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none">'+
+        EM_CATS.map(function(c){return'<button class="emcat'+(m.cat===c.k?' on':'')+'" onclick="emSetCat(\''+jsq(c.k)+'\')"><span style="font-size:20px">'+c.e+'</span>'+esc(c.k)+'</button>';}).join('')+
+      '</div>'+
+    '</div>'+
+    // Currency
+    '<div style="padding:10px 16px 0">'+
+      '<div style="font-size:11px;color:#b8a898;letter-spacing:1px;margin-bottom:8px">幣別</div>'+
+      '<div style="display:flex;gap:8px">'+
+        EM_CURS.map(function(c){return'<button class="emcur'+(m.cur===c?' on':'')+'" onclick="emSetCur(\''+c+'\')">'+c+'</button>';}).join('')+
+      '</div>'+
+    '</div>'+
+    // Number pad
+    '<div style="padding:12px 16px 0">'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px">'+
+        ['7','8','9','4','5','6','1','2','3'].map(function(n){return'<button class="npbtn" onclick="emCalc(\''+n+'\')">'+n+'</button>';}).join('')+
+      '</div>'+
+      '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px">'+
+        '<button class="npbtn" onclick="emCalc(\'.\')">.</button>'+
+        '<button class="npbtn" onclick="emCalc(\'0\')">0</button>'+
+        '<button class="npbtn del" onclick="emCalc(\'⌫\')">⌫</button>'+
+      '</div>'+
+    '</div>'+
+    // Action buttons
+    '<div style="padding:12px 16px 0;display:flex;gap:10px">'+
+      '<button onclick="emCalc(\'C\')" style="flex:1;padding:15px;border-radius:14px;background:#ede8de;border:1px solid #ddd5c5;font-size:15px;font-weight:600;color:#7a6a58;font-family:inherit">清除 C</button>'+
+      '<button onclick="saveExpModal()" style="flex:1;padding:15px;border-radius:14px;background:#b8713a;border:none;font-size:15px;font-weight:700;color:#fff;font-family:inherit">'+(m.mode==='add'?'記帳 ✓':'更新 ✓')+'</button>'+
+    '</div>';
 }
 function doCalc(b){
   var cd=S.calc;
@@ -479,8 +568,7 @@ function doCalc(b){
 function applyCalc(){S.calcForm.amount=S.calc.disp;renderExps();}
 function addExp(){var f=S.calcForm;if(!f.desc.trim()||!f.amount)return;S.exps.push({id:uid(),date:f.date,cat:f.cat,desc:f.desc,amt:parseFloat(f.amount),cur:f.cur});S.calcForm={date:'',cat:'餐飲',desc:'',amount:'',cur:'JPY'};S.calc={disp:'0',prev:null,op:null,nxt:false};S.expsNew=false;scheduleSave();renderExps();}
 function delExp(id){S.exps=S.exps.filter(function(e){return e.id!==id;});scheduleSave();renderExps();}
-function startExpEdit(id){S.editId=id;S.editVal={};renderExps();setTimeout(function(){var inp=document.querySelector('#s-exps input');if(inp)inp.focus();},50);}
-function commitExpEdit(id){var v=S.editVal;S.exps=S.exps.map(function(e){return e.id===id?{id:e.id,date:v.date!=null?v.date:e.date,cat:v.cat||e.cat,desc:v.desc!=null?v.desc:e.desc,amt:v.amount!=null?parseFloat(v.amount):e.amt,cur:v.cur||e.cur}:e;});S.editId=null;S.editVal={};scheduleSave();renderExps();}
+function toggleExpsEdit(){S.expsEdit=!S.expsEdit;renderExps();}
 
 // ── PREP/LUG ────────────────────────────────────────────────────
 function toggleLugEdit(cat){S.lugEdit[cat]=!S.lugEdit[cat];S.editId=null;renderPrep();}
