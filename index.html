@@ -220,7 +220,7 @@ var S={
   emrg:[{id:"ec1",label:"日本警察",num:"110"},{id:"ec2",label:"救護/火警",num:"119"},{id:"ec3",label:"中華航空客服",num:"02-2715-1212"},{id:"ec4",label:"台灣外交部緊急",num:"+886-2-2348-2999"},{id:"ec5",label:"租車公司緊急",num:"（填入）"},{id:"ec6",label:"信用卡海外掛失",num:"（填入）"}],
   memo:D_MEMO, drive:DRIVE,
   // UI state
-  itinDay:0, itinEdit:false, itinTitleEdit:false, itinTitleVal:'',
+  itinDay:0, itinEdit:false, itinTitleEdit:false, itinTitleVal:'', itinHotelEdit:false, itinHotelVal:'',
   prepSub:'prep', prepEdit:false, lugEdit:{},
   expsEdit:false, expsNew:false,
   em:{mode:'add',eid:null,amt:'0',cat:'餐飲',cur:'JPY',desc:'',date:'',prev:null,op:null,nxt:false},
@@ -338,7 +338,18 @@ function renderItin(){
       )+
       '<div style="font-size:11px;color:#b8a898;margin-top:4px">Day'+day.day+' ｜ '+esc(day.date)+(day.driving?' · 自駕 🚗':'')+'</div></div>'+
     '<button onclick="itinGoDay(Math.min('+S.itin.length+'-1,'+S.itinDay+'+1))" style="width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:10px;background:#fff;border:1px solid #ddd5c5;flex-shrink:0;opacity:'+(S.itinDay===S.itin.length-1?.3:1)+'">'+ico(IC.cr,18,'#7a6a58')+'</button></div>';
-  if(day.hotel)h+='<div style="font-size:12px;color:#7a6a58;margin-bottom:10px;padding:8px 12px;background:rgba(184,113,58,.1);border-radius:8px;border:1px solid #ddd5c5;line-height:1.6">'+esc(day.hotel)+'</div>';
+  if(S.itinHotelEdit){
+    h+='<div style="display:flex;gap:6px;margin-bottom:10px;align-items:center">'+
+      '<input id="hotel-inp" class="inp" style="flex:1;font-size:12px" value="'+esc(S.itinHotelVal)+'" oninput="S.itinHotelVal=this.value" onkeydown="handleHotelKey(event)" placeholder="輸入住宿資訊"/>'+
+      ibt("commitHotel()",'chk','#5a9048')+
+      ibt("cancelHotel()",'x','#b8a898')+
+    '</div>';
+  } else {
+    h+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;padding:8px 12px;background:rgba(184,113,58,.1);border-radius:8px;border:1px solid #ddd5c5;line-height:1.6">'+
+      '<span style="flex:1;font-size:12px;color:#7a6a58">'+(day.hotel?esc(day.hotel):'<span style="color:#b8a898">尚未填入住宿資訊</span>')+'</span>'+
+      '<button onclick="startHotelEdit()" style="flex-shrink:0;opacity:.5;padding:0;display:flex">'+ico(IC.pen,13,'#7a6a58')+'</button>'+
+    '</div>';
+  }
   h+=card(stitle('行程安排')+
     '<div style="font-size:11px;color:#b8a898;margin-bottom:8px">點 '+ico(IC.nav,11,'#b8713a')+' 可開啟 Google Maps</div>'+
     '<div id="itin-items">'+buildItinItems(day,em)+'</div>'+
@@ -388,11 +399,15 @@ function buildItinItems(day,em){
       (em?sortBtns("itinMv('"+did+"','"+iid+"','up')","itinMv('"+did+"','"+iid+"','dn')"):'')+'</div>';
   }).join('');
 }
-function itinGoDay(i){S.itinDay=Math.max(0,Math.min(S.itin.length-1,i));S.itinEdit=false;S.itinTitleEdit=false;S.editId=null;renderItin();}
+function itinGoDay(i){S.itinDay=Math.max(0,Math.min(S.itin.length-1,i));S.itinEdit=false;S.itinTitleEdit=false;S.itinHotelEdit=false;S.editId=null;renderItin();}
 function startTitleEdit(){var d=S.itin[S.itinDay];S.itinTitleEdit=true;S.itinTitleVal=d.title;renderItin();setTimeout(function(){var inp=document.getElementById('title-inp');if(inp){inp.focus();inp.select();}},50);}
 function commitTitle(){var v=S.itinTitleVal.trim();if(v)S.itin[S.itinDay].title=v;S.itinTitleEdit=false;scheduleSave();renderItin();renderHome();}
 function cancelTitle(){S.itinTitleEdit=false;renderItin();}
 function handleTitleKey(e){if(e.key==='Enter')commitTitle();else if(e.key==='Escape')cancelTitle();}
+function startHotelEdit(){var d=S.itin[S.itinDay];S.itinHotelEdit=true;S.itinHotelVal=d.hotel||'';renderItin();setTimeout(function(){var inp=document.getElementById('hotel-inp');if(inp){inp.focus();inp.select();}},50);}
+function commitHotel(){S.itin[S.itinDay].hotel=S.itinHotelVal.trim();S.itinHotelEdit=false;scheduleSave();renderItin();}
+function cancelHotel(){S.itinHotelEdit=false;renderItin();}
+function handleHotelKey(e){if(e.key==='Enter')commitHotel();else if(e.key==='Escape')cancelHotel();}
 function itinToggleEdit(){S.itinEdit=!S.itinEdit;S.editId=null;renderItin();}
 function itinMv(did,iid,dir){var d=S.itin.find(function(x){return x.id===did;});if(!d)return;var a=d.items.slice(),idx=a.findIndex(function(i){return i.id===iid;}),ni=dir==='up'?idx-1:idx+1;if(ni<0||ni>=a.length)return;var tmp=a[idx];a[idx]=a[ni];a[ni]=tmp;d.items=a;scheduleSave();renderItin();}
 function itinDelItem(did,iid){var d=S.itin.find(function(x){return x.id===did;});if(!d)return;d.items=d.items.filter(function(i){return i.id!==iid;});scheduleSave();renderItinItems2();}
